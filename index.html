@@ -2,14 +2,14 @@
 <html lang="ms" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>DUEL BOTOL — Pertarungan Logik 1v1 Online</title>
-  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>DUEL BOTOL — Pertarungan Logik 1v1 & Bot AI</title>
+
   <!-- Google Fonts: Plus Jakarta Sans & Space Grotesk -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
-  
+
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -22,8 +22,8 @@
             display: ['"Space Grotesk"', 'sans-serif'],
           },
           colors: {
-            obsidian: '#0B1120',
-            card: '#1E293B',
+            obsidian: '#090E1A',
+            panel: '#131C31',
           }
         }
       }
@@ -32,8 +32,9 @@
 
   <style>
     :root {
-      --bg-obsidian: #0B1120;
-      --bg-card: rgba(30, 41, 59, 0.78);
+      --bg-obsidian: #090E1A;
+      --glass-surface: rgba(19, 28, 49, 0.84);
+      --glass-border: rgba(148, 163, 184, 0.18);
     }
 
     * {
@@ -41,63 +42,95 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body {
+    html, body {
+      margin: 0;
+      padding: 0;
       background-color: var(--bg-obsidian);
-      background-image: 
-        radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.14) 0%, transparent 42%),
-        radial-gradient(circle at 85% 20%, rgba(168, 85, 247, 0.14) 0%, transparent 42%),
-        radial-gradient(circle at 50% 90%, rgba(16, 185, 129, 0.10) 0%, transparent 48%);
       color: #F8FAFC;
       min-height: 100dvh;
       overflow-x: hidden;
     }
 
+    /* Non-blocking decorative ambient background */
+    .ambient-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(circle at 12% 14%, rgba(56, 189, 248, 0.15) 0%, transparent 42%),
+        radial-gradient(circle at 88% 18%, rgba(168, 85, 247, 0.15) 0%, transparent 42%),
+        radial-gradient(circle at 50% 92%, rgba(16, 185, 129, 0.11) 0%, transparent 48%);
+    }
+
+    /* Critical: Responsive touch & pointer rules for all interactive controls */
+    button,
+    [role="button"],
+    .interactive-btn {
+      position: relative;
+      z-index: 10;
+      cursor: pointer;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+    }
+
+    /* Prevent child SVGs or spans inside buttons from swallowing touch/click targets */
+    button svg,
+    [role="button"] svg {
+      pointer-events: none;
+    }
+
     .glass-card {
-      background: var(--bg-card);
+      background: var(--glass-surface);
       backdrop-filter: blur(14px);
       -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(148, 163, 184, 0.16);
-      box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.55);
+      border: 1px solid var(--glass-border);
+      box-shadow: 0 10px 28px -8px rgba(0, 0, 0, 0.55);
     }
 
     .glass-card-glow {
-      background: rgba(30, 41, 59, 0.85);
+      background: rgba(19, 28, 49, 0.9);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
       border: 1px solid rgba(56, 189, 248, 0.35);
-      box-shadow: 0 0 28px -4px rgba(56, 189, 248, 0.2), 0 12px 32px -8px rgba(0, 0, 0, 0.6);
+      box-shadow: 0 0 26px -4px rgba(56, 189, 248, 0.22), 0 12px 30px -8px rgba(0, 0, 0, 0.6);
     }
 
-    /* Slot & Bottle Interactive Animations */
+    /* Slot & Bottle Interactive States */
     .slot-box {
-      transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+      transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
     }
-    .slot-box:active {
-      transform: scale(0.95);
+    .slot-box:active:not(:disabled) {
+      transform: scale(0.94);
     }
     .slot-active {
       border-color: #38BDF8 !important;
-      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.28), inset 0 0 16px rgba(56, 189, 248, 0.15);
-      background: rgba(56, 189, 248, 0.08);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.32), inset 0 0 14px rgba(56, 189, 248, 0.18);
+      background-color: rgba(56, 189, 248, 0.11) !important;
     }
 
     .bottle-btn {
-      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, opacity 0.2s ease;
+      transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.16s ease, background-color 0.16s ease, opacity 0.16s ease;
     }
     .bottle-btn:hover:not(:disabled) {
-      transform: translateY(-3px);
+      transform: translateY(-2px);
     }
     .bottle-btn:active:not(:disabled) {
       transform: scale(0.92);
     }
 
     @keyframes popIn {
-      0% { transform: scale(0.55); opacity: 0; }
-      75% { transform: scale(1.08); opacity: 1; }
+      0% { transform: scale(0.65); opacity: 0; }
+      75% { transform: scale(1.06); opacity: 1; }
       100% { transform: scale(1); opacity: 1; }
     }
     .animate-pop-in {
-      animation: popIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      animation: popIn 0.24s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
     }
 
     @keyframes shakeX {
@@ -110,27 +143,27 @@
     }
 
     @keyframes floatUpReaction {
-      0% { transform: translateY(20px) scale(0.6); opacity: 0; }
-      15% { transform: translateY(0px) scale(1.1); opacity: 1; }
-      80% { transform: translateY(-45px) scale(1); opacity: 1; }
-      100% { transform: translateY(-75px) scale(0.9); opacity: 0; }
+      0% { transform: translateY(16px) scale(0.7); opacity: 0; }
+      15% { transform: translateY(0px) scale(1.08); opacity: 1; }
+      80% { transform: translateY(-42px) scale(1); opacity: 1; }
+      100% { transform: translateY(-70px) scale(0.9); opacity: 0; }
     }
     .reaction-bubble {
-      animation: floatUpReaction 2.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      animation: floatUpReaction 2.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
 
-    @keyframes pulseBorder {
-      0%, 100% { border-color: rgba(16, 185, 129, 0.5); box-shadow: 0 0 20px rgba(16, 185, 129, 0.18); }
-      50% { border-color: rgba(16, 185, 129, 0.95); box-shadow: 0 0 32px rgba(16, 185, 129, 0.36); }
+    @keyframes pulseTurn {
+      0%, 100% { border-color: rgba(16, 185, 129, 0.55); box-shadow: 0 0 18px rgba(16, 185, 129, 0.16); }
+      50% { border-color: rgba(52, 211, 153, 0.95); box-shadow: 0 0 28px rgba(16, 185, 129, 0.34); }
     }
     .turn-active-glow {
-      animation: pulseBorder 2.2s infinite ease-in-out;
+      animation: pulseTurn 2s infinite ease-in-out;
     }
 
-    /* Custom subtle scrollbar */
+    /* Custom subtle scrollbar for drawers/lobby */
     ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
+      width: 5px;
+      height: 5px;
     }
     ::-webkit-scrollbar-track {
       background: rgba(15, 23, 42, 0.4);
@@ -141,44 +174,47 @@
     }
   </style>
 </head>
-<body class="antialiased selection:bg-sky-500 selection:text-white flex flex-col">
+<body class="antialiased selection:bg-sky-500 selection:text-white">
 
-  <!-- Hidden SVG Defs for Bottle Gradients & Glow Filters -->
+  <!-- Decorative Ambient Background (Strictly non-blocking) -->
+  <div class="ambient-bg" aria-hidden="true"></div>
+
+  <!-- Hidden SVG Gradients for 7 Distinct Bottles -->
   <svg width="0" height="0" class="hidden" aria-hidden="true">
     <defs>
       <linearGradient id="grad-delima" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#FCA5A5"/>
-        <stop offset="40%" stop-color="#EF4444"/>
+        <stop offset="42%" stop-color="#EF4444"/>
         <stop offset="100%" stop-color="#991B1B"/>
       </linearGradient>
       <linearGradient id="grad-safir" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#93C5FD"/>
-        <stop offset="40%" stop-color="#3B82F6"/>
+        <stop offset="42%" stop-color="#3B82F6"/>
         <stop offset="100%" stop-color="#1E40AF"/>
       </linearGradient>
       <linearGradient id="grad-zamrud" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#6EE7B7"/>
-        <stop offset="40%" stop-color="#10B981"/>
+        <stop offset="42%" stop-color="#10B981"/>
         <stop offset="100%" stop-color="#065F46"/>
       </linearGradient>
       <linearGradient id="grad-amber" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#FDE68A"/>
-        <stop offset="40%" stop-color="#F59E0B"/>
+        <stop offset="42%" stop-color="#F59E0B"/>
         <stop offset="100%" stop-color="#92400E"/>
       </linearGradient>
       <linearGradient id="grad-kecubung" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#D8B4FE"/>
-        <stop offset="40%" stop-color="#A855F7"/>
+        <stop offset="42%" stop-color="#A855F7"/>
         <stop offset="100%" stop-color="#581C87"/>
       </linearGradient>
       <linearGradient id="grad-koral" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#FDBA74"/>
-        <stop offset="40%" stop-color="#F97316"/>
+        <stop offset="42%" stop-color="#F97316"/>
         <stop offset="100%" stop-color="#9A3412"/>
       </linearGradient>
       <linearGradient id="grad-pirus" x1="0%" y1="0%" x2="100%" y2="100%">
         <stop offset="0%" stop-color="#67E8F9"/>
-        <stop offset="40%" stop-color="#06B6D4"/>
+        <stop offset="42%" stop-color="#06B6D4"/>
         <stop offset="100%" stop-color="#155E75"/>
       </linearGradient>
       <linearGradient id="grad-cork" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -189,268 +225,282 @@
     </defs>
   </svg>
 
-  <!-- Floating Reaction Overlay Container -->
+  <!-- Floating Reaction & Toast Overlays (Strictly pointer-events-none) -->
   <div id="reactionOverlay" class="fixed inset-x-0 bottom-24 pointer-events-none z-50 flex flex-col items-center justify-end gap-2 px-4"></div>
+  <div id="toastContainer" class="fixed top-14 inset-x-0 z-50 flex flex-col items-center gap-2 pointer-events-none px-4"></div>
 
-  <!-- Toast Notification Container -->
-  <div id="toastContainer" class="fixed top-16 inset-x-0 z-50 flex flex-col items-center gap-2 pointer-events-none px-4"></div>
+  <!-- App Root Wrapper -->
+  <div id="appRoot" class="relative z-10 min-h-[100dvh] flex flex-col">
 
-  <!-- Top Navigation Header -->
-  <header class="sticky top-0 z-40 glass-card border-x-0 border-t-0 rounded-none px-4 py-3">
-    <div class="max-w-4xl mx-auto flex items-center justify-between gap-2">
-      <!-- Logo & Title -->
-      <div class="flex items-center gap-2.5">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-lg shadow-sky-500/25">
-          <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M9 3h6m-5 0v4.5L6.2 13.8A4 4 0 009.6 20h4.8a4 4 0 003.4-6.2L14 7.5V3"/>
-          </svg>
-        </div>
-        <div>
-          <h1 class="font-display font-bold text-lg sm:text-xl tracking-tight leading-none bg-gradient-to-r from-white via-sky-200 to-indigo-300 bg-clip-text text-transparent">
-            DUEL BOTOL
-          </h1>
-          <p class="text-[11px] text-slate-400 font-medium tracking-wide">1v1 Logic Deduction</p>
-        </div>
-      </div>
-
-      <!-- Right Status & Sound Controls -->
-      <div class="flex items-center gap-2">
-        <!-- Firebase Connection Pill -->
-        <div id="authStatusBadge" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-slate-800/90 border border-slate-700/80 text-xs font-medium text-amber-300">
-          <span id="authStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-          <span id="authStatusText" class="truncate max-w-[130px] sm:max-w-none">Menyambung...</span>
+    <!-- =================================================================== -->
+    <!-- COMPACT TOP HEADER                                                  -->
+    <!-- =================================================================== -->
+    <header class="shrink-0 z-30 glass-card border-x-0 border-t-0 rounded-none px-3.5 sm:px-5 py-2.5">
+      <div class="max-w-4xl mx-auto flex items-center justify-between gap-2">
+        <!-- Brand -->
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500 via-indigo-500 to-purple-600 flex items-center justify-center shadow-md shadow-sky-500/25 shrink-0">
+            <svg class="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 3h6m-5 0v4.5L6.2 13.8A4 4 0 009.6 20h4.8a4 4 0 003.4-6.2L14 7.5V3"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="font-display font-bold text-base sm:text-lg tracking-tight leading-none bg-gradient-to-r from-white via-sky-200 to-indigo-300 bg-clip-text text-transparent">
+              DUEL BOTOL
+            </h1>
+            <p class="text-[10px] text-slate-400 font-medium tracking-wide hidden sm:block">Pertarungan Logik 1v1 &amp; Bot AI</p>
+          </div>
         </div>
 
-        <!-- Mute/Unmute Toggle -->
-        <button id="soundToggleBtn" type="button" title="Bunyi Kesan" class="p-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700/80 text-slate-200 transition active:scale-95">
-          <svg id="soundIconOn" class="w-5 h-5 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/>
-          </svg>
-          <svg id="soundIconOff" class="w-5 h-5 text-slate-500 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>
-          </svg>
-        </button>
-      </div>
-    </div>
-  </header>
+        <!-- Status & Sound Toggle -->
+        <div class="flex items-center gap-2">
+          <div id="authStatusBadge" class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/90 border border-slate-700/80 text-[11px] font-semibold text-sky-300">
+            <span id="authStatusDot" class="w-2 h-2 rounded-full bg-sky-400"></span>
+            <span id="authStatusText" class="truncate max-w-[125px] sm:max-w-none">Bot Sedia</span>
+          </div>
 
-  <!-- Firebase Auth Error Alert Banner (Shown only if Anonymous Auth is disabled) -->
-  <div id="authErrorBanner" class="hidden max-w-4xl w-full mx-auto px-4 pt-4">
-    <div class="rounded-2xl bg-rose-950/85 border border-rose-500/60 p-4 text-rose-100 shadow-lg">
-      <div class="flex items-start gap-3">
-        <div class="p-2 rounded-xl bg-rose-500/20 text-rose-300 shrink-0 mt-0.5">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-          </svg>
-        </div>
-        <div class="flex-1 text-sm">
-          <h3 class="font-bold text-rose-200 text-base">Anonymous Authentication Belum Diaktifkan</h3>
-          <p class="mt-1 text-rose-200/90 leading-relaxed">
-            Sila buka <strong>Firebase Console</strong> projek <code class="px-1.5 py-0.5 rounded bg-rose-900/90 font-mono text-xs">dashboardcendawan</code> → pergi ke <strong>Authentication → Sign-in method</strong> → aktifkan <strong>Anonymous</strong>, kemudian klik butang di bawah.
-          </p>
-          <button id="retryAuthBtn" type="button" class="mt-3 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-xs transition">
-            Cuba Sambung Semula
+          <button id="soundToggleBtn" type="button" aria-label="Tukar Bunyi" class="p-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700/80 text-slate-200 transition active:scale-95">
+            <svg id="soundIconOn" class="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/>
+            </svg>
+            <svg id="soundIconOff" class="w-4 h-4 text-slate-500 hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>
+            </svg>
           </button>
         </div>
       </div>
-    </div>
-  </div>
+    </header>
 
-  <!-- Main Content Container -->
-  <main class="flex-1 max-w-4xl w-full mx-auto px-4 py-5 sm:py-7 flex flex-col">
+    <!-- =================================================================== -->
+    <!-- VIEW 1: LOBBY SCREEN (SCROLLABLE)                                   -->
+    <!-- =================================================================== -->
+    <section id="viewLobby" class="flex-1 max-w-4xl w-full mx-auto px-3.5 sm:px-5 py-4 sm:py-6 space-y-4 sm:space-y-5">
 
-    <!-- ========================================================= -->
-    <!-- VIEW 1: LOBBY SCREEN                                      -->
-    <!-- ========================================================= -->
-    <section id="viewLobby" class="space-y-5 animate-pop-in">
-      <!-- Player Nickname Card -->
-      <div class="glass-card rounded-2xl p-4 sm:p-5">
-        <label for="nicknameInput" class="block text-xs font-bold uppercase tracking-wider text-sky-400 mb-2">
+      <!-- Non-blocking Firebase Anonymous Auth Helper Notice (Only shown if auth fails) -->
+      <div id="authErrorBanner" class="hidden rounded-2xl bg-amber-950/85 border border-amber-500/50 p-3.5 text-amber-100">
+        <div class="flex items-start justify-between gap-3">
+          <div class="text-xs sm:text-sm">
+            <strong class="text-amber-300">Nota Mod Online:</strong> Anonymous Auth belum diaktifkan di Firebase Console (<code class="font-mono text-xs">dashboardcendawan</code>). Anda masih boleh bermain <strong>Mod Solo vs Bot</strong> serta-merta!
+          </div>
+          <button id="retryAuthBtn" type="button" class="shrink-0 px-3 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs">
+            Cuba Semula
+          </button>
+        </div>
+      </div>
+
+      <!-- Player Nickname & Rules Toggle -->
+      <div class="glass-card rounded-2xl p-4">
+        <label for="nicknameInput" class="block text-[11px] font-bold uppercase tracking-wider text-sky-400 mb-1.5">
           Nama Paparan Anda
         </label>
-        <div class="flex flex-col sm:flex-row gap-3">
-          <input 
-            id="nicknameInput" 
-            type="text" 
-            maxlength="16" 
-            placeholder="Masukkan nama anda..." 
-            class="flex-1 rounded-xl bg-slate-900/90 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/25 px-4 py-3 text-white font-semibold placeholder-slate-500 outline-none transition"
+        <div class="flex gap-2.5">
+          <input
+            id="nicknameInput"
+            type="text"
+            maxlength="16"
+            placeholder="Masukkan nama anda..."
+            class="flex-1 min-w-0 rounded-xl bg-slate-900/90 border border-slate-700 focus:border-sky-500 focus:ring-2 focus:ring-sky-500/25 px-3.5 py-2.5 text-white font-semibold text-sm placeholder-slate-500 outline-none transition"
           />
-          <button id="howToPlayBtn" type="button" class="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-sm flex items-center justify-center gap-2 transition">
+          <button id="howToPlayBtn" type="button" class="shrink-0 px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs sm:text-sm flex items-center gap-1.5 transition">
             <svg class="w-4 h-4 text-sky-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3m.08 4h.01"/>
             </svg>
-            Cara Main
+            <span>Cara Main</span>
           </button>
         </div>
-      </div>
 
-      <!-- How to Play Collapsible Panel -->
-      <div id="howToPlayPanel" class="hidden glass-card rounded-2xl p-4 sm:p-5 border-sky-500/30 text-sm text-slate-300 space-y-2.5">
-        <div class="flex items-center justify-between">
-          <h3 class="font-display font-bold text-base text-white">Peraturan & Cara Bermain</h3>
-          <button id="closeHowToPlayBtn" type="button" class="text-slate-400 hover:text-white p-1">✕</button>
+        <!-- Collapsible How-To-Play -->
+        <div id="howToPlayPanel" class="hidden mt-3.5 pt-3.5 border-t border-slate-700/70 text-xs sm:text-sm text-slate-300 space-y-1.5">
+          <p><strong>1. Susunan Rahsia:</strong> Kedua-dua pihak menyusun kombinasi rahsia botol mereka secara tersembunyi.</p>
+          <p><strong>2. Teka Bergilir:</strong> Teka susunan lawan. Sistem hanya memaparkan <em>berapa jumlah slot yang tepat</em> (cth: <span class="text-emerald-400 font-bold">2/4 Betul</span>) tanpa memberitahu slot mana yang betul.</p>
+          <p><strong>3. Tekaan Lepas:</strong> Gunakan butang <strong>Tekaan Lepas</strong> di bahagian atas permainan untuk menyemak dan menyalin semula tekaan terdahulu tanpa perlu scroll!</p>
         </div>
-        <ol class="list-decimal list-inside space-y-1.5 text-slate-300 leading-relaxed">
-          <li><strong>Susunan Rahsia:</strong> Host dan Pencabar masing-masing menyusun kombinasi rahsia botol mereka secara tersembunyi.</li>
-          <li><strong>Teka Bergilir-gilir:</strong> Setiap giliran, pemain menyusun botol untuk meneka susunan rahsia pihak lawan.</li>
-          <li><strong>Petunjuk Buta (Blind Feedback):</strong> Sistem hanya memberitahu <em>berapa jumlah slot yang tepat</em> (contoh: <span class="text-emerald-400 font-semibold">2 Betul</span>), tanpa mendedahkan kedudukan mana yang betul.</li>
-          <li><strong>Syarat Menang:</strong> Pemain pertama yang meneka keseluruhan susunan lawan dengan 100% tepat menang! (Atau seri jika mod <em>Equalizer</em> diaktifkan).</li>
-        </ol>
       </div>
 
-      <!-- Two-Column Action Grid: Host vs Challenger -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        
-        <!-- Create Room (Host) -->
-        <div class="lg:col-span-7 glass-card-glow rounded-2xl p-5 flex flex-col justify-between space-y-5">
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <div>
-                <span class="inline-block px-2.5 py-0.5 rounded-full bg-sky-500/15 text-sky-400 text-[11px] font-bold uppercase tracking-wider mb-1">Host</span>
-                <h2 class="font-display font-bold text-xl text-white">Cipta Bilik Baru</h2>
-              </div>
-              <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-sky-400">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                </svg>
-              </div>
-            </div>
+      <!-- Shared Match Settings Card -->
+      <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="font-display font-bold text-base sm:text-lg text-white">Tetapan Perlawanan</h2>
+          <span class="text-[11px] font-semibold text-slate-400">Digunakan untuk Bot &amp; Host</span>
+        </div>
 
-            <!-- Setting 1: Number of Slots -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-2">Bilangan Slot</label>
-              <div id="slotCountSelector" class="grid grid-cols-4 gap-2">
-                <button type="button" data-val="3" class="setting-pill py-2.5 rounded-xl font-display font-bold text-sm border border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500 transition">3 Slot</button>
-                <button type="button" data-val="4" class="setting-pill active py-2.5 rounded-xl font-display font-bold text-sm border border-sky-400 bg-sky-500/20 text-white shadow-sm transition">4 Slot</button>
-                <button type="button" data-val="5" class="setting-pill py-2.5 rounded-xl font-display font-bold text-sm border border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500 transition">5 Slot</button>
-                <button type="button" data-val="6" class="setting-pill py-2.5 rounded-xl font-display font-bold text-sm border border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500 transition">6 Slot</button>
-              </div>
-            </div>
-
-            <!-- Setting 2: Item Mode -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-2">Mod Item Botol</label>
-              <div id="duplicateModeSelector" class="grid grid-cols-2 gap-2">
-                <button type="button" data-val="false" class="setting-pill active py-2.5 px-3 rounded-xl text-left border border-sky-400 bg-sky-500/20 text-white transition">
-                  <div class="font-bold text-xs sm:text-sm">Unik</div>
-                  <div class="text-[11px] text-sky-200/80">Tiada botol berulang</div>
-                </button>
-                <button type="button" data-val="true" class="setting-pill py-2.5 px-3 rounded-xl text-left border border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500 transition">
-                  <div class="font-bold text-xs sm:text-sm">Hardcore</div>
-                  <div class="text-[11px] text-slate-400">Boleh botol sama</div>
-                </button>
-              </div>
-            </div>
-
-            <!-- Setting 3: Win Rule -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-2">Peraturan Menang</label>
-              <div id="winRuleSelector" class="grid grid-cols-2 gap-2">
-                <button type="button" data-val="instant" class="setting-pill active py-2.5 px-3 rounded-xl text-left border border-sky-400 bg-sky-500/20 text-white transition">
-                  <div class="font-bold text-xs sm:text-sm">Instant Win</div>
-                  <div class="text-[11px] text-sky-200/80">Tepat dulu terus menang</div>
-                </button>
-                <button type="button" data-val="equalizer" class="setting-pill py-2.5 px-3 rounded-xl text-left border border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500 transition">
-                  <div class="font-bold text-xs sm:text-sm">Equalizer</div>
-                  <div class="text-[11px] text-slate-400">Peluang terakhir P2</div>
-                </button>
-              </div>
-            </div>
-
-            <!-- Setting 4: Turn Timer -->
-            <div>
-              <label class="block text-xs font-semibold text-slate-300 mb-2">Had Masa Giliran</label>
-              <div id="timerSelector" class="grid grid-cols-4 gap-2">
-                <button type="button" data-val="0" class="setting-pill py-2 rounded-xl font-semibold text-xs sm:text-sm border border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500 transition">Tiada Had</button>
-                <button type="button" data-val="20" class="setting-pill py-2 rounded-xl font-display font-bold text-xs sm:text-sm border border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500 transition">20 Saat</button>
-                <button type="button" data-val="30" class="setting-pill active py-2 rounded-xl font-display font-bold text-xs sm:text-sm border border-sky-400 bg-sky-500/20 text-white transition">30 Saat</button>
-                <button type="button" data-val="45" class="setting-pill py-2 rounded-xl font-display font-bold text-xs sm:text-sm border border-slate-700 bg-slate-900/70 text-slate-300 hover:border-slate-500 transition">45 Saat</button>
-              </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <!-- Slot Count -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Bilangan Slot</label>
+            <div id="slotCountSelector" class="grid grid-cols-4 gap-1.5">
+              <button type="button" data-val="3" class="setting-pill py-2 rounded-xl font-display font-bold text-xs sm:text-sm border border-slate-700 bg-slate-900/75 text-slate-300">3 Slot</button>
+              <button type="button" data-val="4" class="setting-pill active py-2 rounded-xl font-display font-bold text-xs sm:text-sm border border-sky-400 bg-sky-500/20 text-white">4 Slot</button>
+              <button type="button" data-val="5" class="setting-pill py-2 rounded-xl font-display font-bold text-xs sm:text-sm border border-slate-700 bg-slate-900/75 text-slate-300">5 Slot</button>
+              <button type="button" data-val="6" class="setting-pill py-2 rounded-xl font-display font-bold text-xs sm:text-sm border border-slate-700 bg-slate-900/75 text-slate-300">6 Slot</button>
             </div>
           </div>
 
-          <button id="createRoomBtn" type="button" class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-display font-bold text-base shadow-lg shadow-sky-500/25 transition active:scale-[0.98] flex items-center justify-center gap-2">
-            <span>Cipta Bilik & Jana Kod</span>
+          <!-- Turn Timer -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Had Masa Giliran</label>
+            <div id="timerSelector" class="grid grid-cols-4 gap-1.5">
+              <button type="button" data-val="0" class="setting-pill py-2 rounded-xl font-semibold text-xs border border-slate-700 bg-slate-900/75 text-slate-300">Tiada</button>
+              <button type="button" data-val="20" class="setting-pill py-2 rounded-xl font-display font-bold text-xs border border-slate-700 bg-slate-900/75 text-slate-300">20s</button>
+              <button type="button" data-val="30" class="setting-pill active py-2 rounded-xl font-display font-bold text-xs border border-sky-400 bg-sky-500/20 text-white">30s</button>
+              <button type="button" data-val="45" class="setting-pill py-2 rounded-xl font-display font-bold text-xs border border-slate-700 bg-slate-900/75 text-slate-300">45s</button>
+            </div>
+          </div>
+
+          <!-- Item Rule -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Mod Item Botol</label>
+            <div id="duplicateModeSelector" class="grid grid-cols-2 gap-2">
+              <button type="button" data-val="false" class="setting-pill active py-2 px-3 rounded-xl text-left border border-sky-400 bg-sky-500/20 text-white">
+                <div class="font-bold text-xs sm:text-sm">Mod Unik</div>
+                <div class="text-[10px] text-sky-200/80">Tiada botol berulang</div>
+              </button>
+              <button type="button" data-val="true" class="setting-pill py-2 px-3 rounded-xl text-left border border-slate-700 bg-slate-900/75 text-slate-300">
+                <div class="font-bold text-xs sm:text-sm">Mod Hardcore</div>
+                <div class="text-[10px] text-slate-400">Boleh botol sama</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Win Rule -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-300 mb-1.5">Peraturan Menang</label>
+            <div id="winRuleSelector" class="grid grid-cols-2 gap-2">
+              <button type="button" data-val="instant" class="setting-pill active py-2 px-3 rounded-xl text-left border border-sky-400 bg-sky-500/20 text-white">
+                <div class="font-bold text-xs sm:text-sm">Instant Win</div>
+                <div class="text-[10px] text-sky-200/80">Tepat dulu terus menang</div>
+              </button>
+              <button type="button" data-val="equalizer" class="setting-pill py-2 px-3 rounded-xl text-left border border-slate-700 bg-slate-900/75 text-slate-300">
+                <div class="font-bold text-xs sm:text-sm">Equalizer</div>
+                <div class="text-[10px] text-slate-400">1 peluang terakhir P2</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mode Selection Cards: SOLO VS BOT vs ONLINE MULTIPLAYER -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
+
+        <!-- CARD A: SOLO VS BOT AI (Instant Offline/Online Play) -->
+        <div class="lg:col-span-6 glass-card-glow rounded-2xl p-4 sm:p-5 border-emerald-400/40 flex flex-col justify-between space-y-4">
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="inline-block px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-wider mb-1">
+                  Main Serta-Merta
+                </span>
+                <h2 class="font-display font-bold text-xl text-white">Main vs Bot AI</h2>
+              </div>
+              <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/35 flex items-center justify-center text-xl">
+                🤖
+              </div>
+            </div>
+
+            <p class="text-xs sm:text-sm text-slate-300">
+              Uji strategi logik anda menentang Bot pintar tanpa perlu menunggu rakan. Pilih tahap kepintaran AI:
+            </p>
+
+            <!-- Bot Difficulty Selector -->
+            <div id="botDifficultySelector" class="grid grid-cols-3 gap-2">
+              <button type="button" data-val="casual" class="setting-pill py-2.5 px-2 rounded-xl text-center border border-slate-700 bg-slate-900/75 text-slate-300">
+                <div class="font-bold text-xs sm:text-sm">Santai</div>
+                <div class="text-[10px] text-slate-400">Mudah</div>
+              </button>
+              <button type="button" data-val="tactical" class="setting-pill active py-2.5 px-2 rounded-xl text-center border border-sky-400 bg-sky-500/20 text-white">
+                <div class="font-bold text-xs sm:text-sm">Taktikal</div>
+                <div class="text-[10px] text-sky-200/80">Sederhana</div>
+              </button>
+              <button type="button" data-val="mastermind" class="setting-pill py-2.5 px-2 rounded-xl text-center border border-slate-700 bg-slate-900/75 text-slate-300">
+                <div class="font-bold text-xs sm:text-sm">Mastermind</div>
+                <div class="text-[10px] text-slate-400">Pakar AI</div>
+              </button>
+            </div>
+          </div>
+
+          <button id="startBotGameBtn" type="button" class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-display font-bold text-base shadow-lg shadow-emerald-500/25 transition active:scale-[0.98] flex items-center justify-center gap-2">
+            <span>Mula Lawan Bot</span>
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
             </svg>
           </button>
         </div>
 
-        <!-- Join Room (Challenger) -->
-        <div class="lg:col-span-5 glass-card rounded-2xl p-5 flex flex-col justify-between space-y-5">
-          <div class="space-y-4">
+        <!-- CARD B: ONLINE MULTIPLAYER 1v1 -->
+        <div class="lg:col-span-6 glass-card rounded-2xl p-4 sm:p-5 flex flex-col justify-between space-y-4">
+          <div class="space-y-3">
             <div class="flex items-center justify-between">
               <div>
-                <span class="inline-block px-2.5 py-0.5 rounded-full bg-purple-500/15 text-purple-400 text-[11px] font-bold uppercase tracking-wider mb-1">Pencabar</span>
-                <h2 class="font-display font-bold text-xl text-white">Sertai Bilik</h2>
+                <span class="inline-block px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-bold uppercase tracking-wider mb-1">
+                  1v1 Masa Nyata
+                </span>
+                <h2 class="font-display font-bold text-xl text-white">Online Multiplayer</h2>
               </div>
-              <div class="w-10 h-10 rounded-xl bg-purple-500/15 border border-purple-400/30 flex items-center justify-center text-purple-400">
-                <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/>
-                </svg>
+              <div class="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-400/35 flex items-center justify-center text-xl">
+                🌐
               </div>
             </div>
 
-            <p class="text-sm text-slate-400 leading-relaxed">
-              Masukkan <strong>5 aksara Kod Bilik</strong> yang dikongsi oleh Host untuk memulakan pertarungan secara langsung.
-            </p>
+            <button id="createRoomBtn" type="button" class="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-display font-bold text-sm sm:text-base shadow-md shadow-sky-500/20 transition active:scale-[0.98] flex items-center justify-center gap-2">
+              <span>+ Cipta Bilik Baru (Host)</span>
+            </button>
 
-            <div>
-              <label for="joinCodeInput" class="block text-xs font-semibold text-slate-300 mb-2">Kod Bilik (5 Aksara)</label>
-              <input 
-                id="joinCodeInput" 
-                type="text" 
-                maxlength="5" 
-                placeholder="CTH: K9P2X" 
+            <div class="relative flex items-center py-0.5">
+              <div class="flex-grow border-t border-slate-700/80"></div>
+              <span class="shrink mx-3 text-[11px] font-bold uppercase text-slate-500">atau sertai bilik</span>
+              <div class="flex-grow border-t border-slate-700/80"></div>
+            </div>
+
+            <div class="flex gap-2">
+              <input
+                id="joinCodeInput"
+                type="text"
+                maxlength="5"
+                placeholder="KOD BILIK"
                 autocomplete="off"
-                class="w-full rounded-xl bg-slate-900/90 border border-slate-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25 px-4 py-3.5 text-center font-display font-bold text-2xl tracking-[0.28em] uppercase text-white placeholder-slate-600 outline-none transition"
+                class="w-32 sm:w-36 rounded-xl bg-slate-900/90 border border-slate-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/25 px-3 py-2.5 text-center font-display font-bold text-base sm:text-lg tracking-[0.2em] uppercase text-white placeholder-slate-600 outline-none transition"
               />
+              <button id="joinRoomBtn" type="button" class="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-display font-bold text-sm sm:text-base shadow-md shadow-purple-500/20 transition active:scale-[0.98]">
+                Sertai Bilik
+              </button>
             </div>
           </div>
 
-          <button id="joinRoomBtn" type="button" class="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-display font-bold text-base shadow-lg shadow-purple-500/25 transition active:scale-[0.98] flex items-center justify-center gap-2">
-            <span>Sertai Pertarungan</span>
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-          </button>
+          <p class="text-[11px] text-slate-400">
+            Cipta bilik untuk menjana kod 4-aksara dan kongsi dengan rakan anda.
+          </p>
         </div>
       </div>
 
-      <!-- Bottle Catalog Preview -->
-      <div class="glass-card rounded-2xl p-4 sm:p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">7 Jenis Botol & Bentuk Unik</h3>
-          <span class="text-[11px] text-slate-500">Mesra buta warna (Bentuk + Warna)</span>
+      <!-- 7 Bottles Legend Preview -->
+      <div class="glass-card rounded-2xl p-3.5 sm:p-4">
+        <div class="flex items-center justify-between mb-2.5">
+          <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400">7 Jenis Botol (Bentuk &amp; Warna Unik)</h3>
+          <span class="text-[10px] text-slate-500">Mesra buta warna</span>
         </div>
         <div id="lobbyBottlePreview" class="grid grid-cols-4 sm:grid-cols-7 gap-2"></div>
       </div>
     </section>
 
-
-    <!-- ========================================================= -->
-    <!-- VIEW 2: WAITING ROOM                                      -->
-    <!-- ========================================================= -->
-    <section id="viewWaiting" class="hidden flex-1 flex flex-col items-center justify-center max-w-lg mx-auto w-full space-y-5 animate-pop-in">
-      <div class="glass-card-glow rounded-3xl p-6 sm:p-8 w-full text-center space-y-6">
+    <!-- =================================================================== -->
+    <!-- VIEW 2: WAITING ROOM (ONLINE HOST)                                  -->
+    <!-- =================================================================== -->
+    <section id="viewWaiting" class="hidden flex-1 flex flex-col items-center justify-center max-w-md mx-auto w-full px-4 py-6">
+      <div class="glass-card-glow rounded-3xl p-6 w-full text-center space-y-5">
         <div class="space-y-1">
           <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-400/30 text-amber-300 text-xs font-bold">
             <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
             MENUNGGU PENCABAR
           </span>
-          <h2 class="font-display font-bold text-2xl text-white pt-2">Kongsikan Kod Bilik Ini</h2>
-          <p class="text-sm text-slate-400">Hantar kod di bawah kepada rakan anda untuk mula menyusun botol.</p>
+          <h2 class="font-display font-bold text-2xl text-white pt-1.5">Kongsikan Kod Bilik</h2>
+          <p class="text-xs sm:text-sm text-slate-400">Berikan kod ini kepada rakan anda untuk menyertai perlawanan.</p>
         </div>
 
-        <!-- Big Room Code Display -->
-        <div class="p-5 rounded-2xl bg-slate-950/80 border border-slate-700/90 space-y-3">
-          <div id="waitingRoomCode" class="font-display font-bold text-4xl sm:text-5xl tracking-[0.25em] text-sky-400 select-all pl-2">
-            -----
+        <div class="p-4 rounded-2xl bg-slate-950/85 border border-slate-700/90 space-y-2.5">
+          <div id="waitingRoomCode" class="font-display font-bold text-4xl sm:text-5xl tracking-[0.24em] text-sky-400 select-all pl-2">
+            ----
           </div>
-          <button id="copyRoomCodeBtn" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-300 font-semibold text-sm transition active:scale-95">
+          <button id="copyRoomCodeBtn" type="button" class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-300 font-semibold text-xs sm:text-sm transition active:scale-95">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
             </svg>
@@ -458,458 +508,433 @@
           </button>
         </div>
 
-        <!-- Match Settings Pills -->
-        <div id="waitingSettingsPills" class="flex flex-wrap items-center justify-center gap-2 text-xs font-semibold"></div>
+        <div id="waitingSettingsPills" class="flex flex-wrap items-center justify-center gap-1.5 text-xs font-semibold"></div>
 
-        <!-- Player Connection Slots -->
-        <div class="grid grid-cols-2 gap-3 text-left">
-          <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-emerald-500/40">
-            <div class="text-[11px] font-bold text-emerald-400 uppercase">Host (Anda)</div>
-            <div id="waitingHostName" class="font-bold text-white truncate mt-0.5">Pemain</div>
-            <div class="text-xs text-emerald-300/80 mt-1 flex items-center gap-1">
-              <span>●</span> Sedia
-            </div>
-          </div>
-          <div class="p-3.5 rounded-2xl bg-slate-900/60 border border-dashed border-slate-700">
-            <div class="text-[11px] font-bold text-slate-400 uppercase">Pencabar</div>
-            <div class="font-semibold text-slate-500 mt-0.5">Menunggu...</div>
-            <div class="text-xs text-slate-500 mt-1 flex items-center gap-1.5">
-              <span class="w-2 h-2 rounded-full bg-slate-600 animate-bounce"></span> Belum masuk
-            </div>
-          </div>
-        </div>
-
-        <button id="leaveWaitingBtn" type="button" class="w-full py-3 rounded-xl bg-slate-800/90 hover:bg-rose-950/70 border border-slate-700 hover:border-rose-500/50 text-slate-300 hover:text-rose-200 font-semibold text-sm transition">
-          Batal & Kembali ke Lobi
+        <button id="leaveWaitingBtn" type="button" class="w-full py-3 rounded-xl bg-slate-800/90 hover:bg-rose-950/75 border border-slate-700 hover:border-rose-500/50 text-slate-300 hover:text-rose-200 font-semibold text-sm transition">
+          Batal &amp; Kembali ke Lobi
         </button>
       </div>
     </section>
 
-
-    <!-- ========================================================= -->
-    <!-- VIEW 3: SECRET ARRANGEMENT PHASE (SETUP)                  -->
-    <!-- ========================================================= -->
-    <section id="viewSetup" class="hidden space-y-5 animate-pop-in">
-      <!-- Top Match Bar -->
-      <div class="glass-card rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3">
-        <div class="flex items-center gap-2.5">
-          <span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 font-display font-bold text-xs text-sky-400 tracking-wider">
-            BILIK: <span id="setupRoomCode">-----</span>
+    <!-- =================================================================== -->
+    <!-- VIEW 3: SECRET SETUP PHASE (ZERO-SCROLL RESPONSIVE)                 -->
+    <!-- =================================================================== -->
+    <section id="viewSetup" class="hidden flex-1 min-h-0 max-w-3xl w-full mx-auto px-3 sm:px-5 py-2.5 sm:py-4 flex flex-col justify-between gap-2.5">
+      <!-- Top Sub-Bar -->
+      <div class="shrink-0 glass-card rounded-2xl px-3.5 py-2.5 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2 min-w-0">
+          <span id="setupModeBadge" class="shrink-0 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 font-display font-bold text-xs text-sky-400">
+            MOD BOT
           </span>
-          <div id="setupSettingsSummary" class="text-xs text-slate-300 font-medium"></div>
+          <span id="setupSettingsSummary" class="text-xs text-slate-300 font-medium truncate"></span>
         </div>
-        <button id="leaveSetupBtn" type="button" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/80 border border-slate-700 hover:border-rose-500/40 text-xs font-semibold text-slate-300 hover:text-rose-200 transition">
+        <button id="leaveSetupBtn" type="button" class="shrink-0 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/80 border border-slate-700 text-xs font-semibold text-slate-300 hover:text-rose-200 transition">
           Keluar
         </button>
       </div>
 
-      <!-- Players Readiness Status -->
-      <div class="grid grid-cols-2 gap-3">
-        <div id="setupMyStatusCard" class="glass-card rounded-2xl p-3.5 border-sky-500/40">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-sky-400">Anda</span>
-            <span id="setupMyReadyBadge" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-bold">Menyusun...</span>
+      <!-- Readiness Strip -->
+      <div class="shrink-0 grid grid-cols-2 gap-2.5">
+        <div class="glass-card rounded-xl px-3 py-2 border-sky-500/35 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase text-sky-400">Anda</div>
+            <div id="setupMyName" class="font-bold text-white text-xs sm:text-sm truncate">Pemain</div>
           </div>
-          <div id="setupMyName" class="font-bold text-white text-sm sm:text-base truncate mt-1">Pemain 1</div>
+          <span id="setupMyReadyBadge" class="shrink-0 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold">Menyusun</span>
         </div>
-
-        <div id="setupOppStatusCard" class="glass-card rounded-2xl p-3.5">
-          <div class="flex items-center justify-between">
-            <span class="text-[11px] font-bold uppercase tracking-wider text-purple-400">Lawan</span>
-            <span id="setupOppReadyBadge" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-bold">Menyusun...</span>
+        <div class="glass-card rounded-xl px-3 py-2 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold uppercase text-purple-400">Lawan</div>
+            <div id="setupOppName" class="font-bold text-white text-xs sm:text-sm truncate">Bot AI</div>
           </div>
-          <div id="setupOppName" class="font-bold text-white text-sm sm:text-base truncate mt-1">Pemain 2</div>
+          <span id="setupOppReadyBadge" class="shrink-0 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">Sedia ✓</span>
         </div>
       </div>
 
-      <!-- Secret Arrangement Workspace -->
-      <div class="glass-card-glow rounded-3xl p-5 sm:p-6 space-y-6">
-        <div class="text-center space-y-1">
-          <h2 class="font-display font-bold text-xl sm:text-2xl text-white">Susun Kombinasi Rahsia Anda</h2>
-          <p id="setupRuleHint" class="text-xs sm:text-sm text-slate-300">
-            Pilih botol di bawah untuk mengisi slot. Pihak lawan perlu meneka susunan ini!
-          </p>
+      <!-- Main Setup Card -->
+      <div class="flex-1 min-h-0 glass-card-glow rounded-2xl p-3.5 sm:p-5 flex flex-col justify-between gap-3">
+        <div class="text-center shrink-0">
+          <h2 class="font-display font-bold text-lg sm:text-xl text-white">Susun Kod Rahsia Anda</h2>
+          <p id="setupRuleHint" class="text-xs text-slate-300 mt-0.5">Ketik botol di bawah untuk mengisi slot rahsia.</p>
         </div>
 
-        <!-- Interactive Secret Slots Rack -->
-        <div id="setupSlotsContainer" class="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 py-2"></div>
+        <!-- Secret Slots Rack -->
+        <div id="setupSlotsContainer" class="flex flex-wrap items-center justify-center gap-2 sm:gap-3.5 my-auto"></div>
 
-        <!-- Setup Controls (Palette or Locked State) -->
-        <div id="setupInteractiveControls" class="space-y-5">
-          <!-- Bottle Palette -->
-          <div>
-            <div class="flex items-center justify-between mb-2">
-              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Pilih Item Botol</span>
-              <span class="text-[11px] text-slate-400">Ketik slot berisi untuk buang</span>
-            </div>
-            <div id="setupBottlePalette" class="grid grid-cols-4 sm:grid-cols-7 gap-2 sm:gap-2.5"></div>
-          </div>
+        <!-- Controls or Locked State -->
+        <div id="setupInteractiveControls" class="shrink-0 space-y-2.5">
+          <div id="setupBottlePalette" class="grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2"></div>
 
-          <!-- Utility Buttons + Lock Button -->
-          <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
-            <div class="grid grid-cols-2 gap-2.5 sm:w-auto">
-              <button id="setupRandomBtn" type="button" class="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-sm flex items-center justify-center gap-1.5 transition active:scale-95">
-                <span>🎲</span> Susun Rawak
-              </button>
-              <button id="setupClearBtn" type="button" class="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-sm flex items-center justify-center gap-1.5 transition active:scale-95">
-                <span>🗑️</span> Kosongkan
-              </button>
-            </div>
-            <button id="lockSecretBtn" type="button" disabled class="flex-1 py-3.5 px-6 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 disabled:border disabled:border-slate-700 text-white font-display font-bold text-base shadow-lg shadow-emerald-500/20 disabled:shadow-none transition active:scale-[0.98] flex items-center justify-center gap-2">
-              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/>
-              </svg>
-              <span>Kunci Susunan Rahsia</span>
+          <div class="grid grid-cols-12 gap-2 pt-1">
+            <button id="setupRandomBtn" type="button" class="col-span-3 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1 transition active:scale-95">
+              <span>🎲</span><span class="hidden sm:inline">Rawak</span>
+            </button>
+            <button id="setupClearBtn" type="button" class="col-span-3 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1 transition active:scale-95">
+              <span>🗑️</span><span class="hidden sm:inline">Padam</span>
+            </button>
+            <button id="lockSecretBtn" type="button" disabled class="col-span-6 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 disabled:border disabled:border-slate-700 text-white font-display font-bold text-xs sm:text-base shadow-lg shadow-emerald-500/20 disabled:shadow-none transition active:scale-[0.98]">
+              🔒 Sahkan Susunan
             </button>
           </div>
         </div>
 
-        <!-- Locked Waiting Message -->
-        <div id="setupLockedBanner" class="hidden p-4 rounded-2xl bg-emerald-950/60 border border-emerald-500/40 text-center space-y-1">
-          <div class="font-bold text-emerald-300 text-base">🔒 Susunan Rahsia Anda Telah Dikunci!</div>
-          <p class="text-xs sm:text-sm text-emerald-200/80">Menunggu pihak lawan selesai mengunci susunan mereka...</p>
+        <div id="setupLockedBanner" class="hidden shrink-0 p-3.5 rounded-xl bg-emerald-950/65 border border-emerald-500/45 text-center">
+          <div class="font-bold text-emerald-300 text-sm">🔒 Susunan Rahsia Anda Dikunci!</div>
+          <p class="text-xs text-emerald-200/80 mt-0.5">Menunggu pihak lawan selesai menyusun...</p>
         </div>
       </div>
     </section>
 
+    <!-- =================================================================== -->
+    <!-- VIEW 4: ZERO-SCROLL GAMEPLAY ARENA (100dvh LOCKED)                  -->
+    <!-- =================================================================== -->
+    <section id="viewPlaying" class="hidden flex-1 min-h-0 max-w-3xl w-full mx-auto px-3 sm:px-5 py-2 sm:py-3 flex flex-col justify-between gap-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
 
-    <!-- ========================================================= -->
-    <!-- VIEW 4: TURN-BASED GUESSING ARENA (PLAYING)               -->
-    <!-- ========================================================= -->
-    <section id="viewPlaying" class="hidden space-y-4 animate-pop-in">
-      <!-- Arena Top Info Bar -->
-      <div class="glass-card rounded-2xl p-3 sm:px-4 flex items-center justify-between gap-2">
-        <div class="flex items-center gap-2 flex-wrap">
-          <span class="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-700 font-display font-bold text-xs text-sky-400">
-            <span id="playRoomCode">-----</span>
+      <!-- 1. Top Game Control Bar + "Tekaan Lepas" Drawer Trigger Button -->
+      <div class="shrink-0 glass-card rounded-2xl px-3 py-2 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span id="playModeTag" class="px-2 py-1 rounded-lg bg-slate-900 border border-slate-700 font-display font-bold text-[11px] sm:text-xs text-sky-400 shrink-0">
+            BOT
           </span>
-          <span class="px-2.5 py-1 rounded-lg bg-indigo-500/20 border border-indigo-400/30 font-display font-bold text-xs text-indigo-300">
+          <span class="px-2 py-1 rounded-lg bg-indigo-500/20 border border-indigo-400/30 font-display font-bold text-[11px] sm:text-xs text-indigo-300 shrink-0">
             Pusingan <span id="playRoundNum">1</span>
           </span>
-          <span id="playModeBadge" class="hidden sm:inline-block px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-xs font-medium"></span>
         </div>
-        <button id="leavePlayingBtn" type="button" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/80 border border-slate-700 hover:border-rose-500/40 text-xs font-semibold text-slate-300 hover:text-rose-200 transition">
+
+        <!-- Prominent "Tekaan Lepas" Button (Opens non-disruptive slide-over drawer) -->
+        <button id="openLastGuessDrawerBtn" type="button" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/50 text-sky-200 font-bold text-xs transition active:scale-95">
+          <svg class="w-3.5 h-3.5 text-sky-300 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span id="lastGuessBtnLabel">Tekaan Lepas: Belum</span>
+        </button>
+
+        <button id="leavePlayingBtn" type="button" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-rose-950/80 border border-slate-700 text-[11px] sm:text-xs font-semibold text-slate-300 hover:text-rose-200 transition shrink-0">
           Keluar
         </button>
       </div>
 
-      <!-- Equalizer Special Alert Banner -->
-      <div id="equalizerBanner" class="hidden rounded-2xl bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-amber-500/20 border border-amber-400/60 p-3.5 text-center shadow-lg">
-        <div class="font-display font-bold text-amber-300 text-sm sm:text-base">
-          ⚡ PELUANG TERAKHIR (EQUALIZER)!
-        </div>
-        <p id="equalizerBannerText" class="text-xs sm:text-sm text-amber-100 mt-0.5"></p>
+      <!-- 2. Equalizer Alert (Only shown if triggered) -->
+      <div id="equalizerBanner" class="hidden shrink-0 rounded-xl bg-amber-500/20 border border-amber-400/60 px-3 py-1.5 text-center">
+        <span class="font-display font-bold text-amber-300 text-xs">⚡ EQUALIZER: </span>
+        <span id="equalizerBannerText" class="text-xs text-amber-100"></span>
       </div>
 
-      <!-- Turn & Timer Banner -->
-      <div id="turnBannerCard" class="glass-card rounded-2xl p-4 border-2 transition-all">
-        <div class="flex items-center justify-between gap-3">
-          <div>
-            <div id="turnStatusTitle" class="font-display font-bold text-lg sm:text-xl text-white">
-              GILIRAN ANDA MENYUSUN
+      <!-- 3. Compact Turn Status, Latest Score & Timer Banner -->
+      <div id="turnBannerCard" class="shrink-0 glass-card rounded-2xl px-3.5 py-2.5 border transition-all">
+        <div class="flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <div id="turnStatusTitle" class="font-display font-bold text-sm sm:text-base text-emerald-300 truncate">
+              GILIRAN ANDA MENEKA
             </div>
-            <p id="turnStatusSub" class="text-xs sm:text-sm text-slate-300 mt-0.5">
-              Teka susunan rahsia pihak lawan
-            </p>
+            <div id="turnStatusSub" class="text-[11px] sm:text-xs text-slate-300 truncate">
+              Susun botol di bawah dan tekan Hantar Tekaan
+            </div>
           </div>
-          <!-- Timer Pill (Shown if turnTime > 0) -->
-          <div id="timerPillWrapper" class="hidden shrink-0 text-right">
-            <div id="timerSecondsText" class="font-display font-bold text-2xl sm:text-3xl text-sky-400 leading-none">
-              30s
+
+          <!-- Right: Latest Feedback Badge + Timer -->
+          <div class="flex items-center gap-2.5 shrink-0">
+            <div id="latestFeedbackPill" class="hidden px-2.5 py-1 rounded-xl bg-slate-900/95 border border-sky-400/40 text-right">
+              <div id="latestFeedbackActor" class="text-[9px] font-bold uppercase text-slate-400 leading-none">Skor Lepas</div>
+              <div id="latestFeedbackScore" class="font-display font-bold text-xs sm:text-sm text-sky-300 mt-0.5 leading-none">0/4 Betul</div>
             </div>
-            <div class="text-[10px] uppercase tracking-wider text-slate-400 font-bold mt-1">Baki Masa</div>
+
+            <div id="timerPillWrapper" class="hidden text-right pl-1 border-l border-slate-700/80">
+              <div id="timerSecondsText" class="font-display font-bold text-lg sm:text-xl text-sky-400 leading-none">30s</div>
+              <div class="text-[9px] uppercase text-slate-400 font-bold">Masa</div>
+            </div>
           </div>
         </div>
+
         <!-- Timer Progress Bar -->
-        <div id="timerBarContainer" class="hidden w-full h-2 bg-slate-900 rounded-full overflow-hidden mt-3">
+        <div id="timerBarContainer" class="hidden w-full h-1.5 bg-slate-950 rounded-full overflow-hidden mt-2">
           <div id="timerProgressBar" class="h-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-100" style="width: 100%"></div>
         </div>
       </div>
 
-      <!-- Blind Feedback Alert Banner -->
-      <div id="blindFeedbackBanner" class="hidden rounded-2xl p-4 border text-center transition-all animate-pop-in">
-        <div id="blindFeedbackActor" class="text-xs font-bold uppercase tracking-wider opacity-85"></div>
-        <div id="blindFeedbackScore" class="font-display font-bold text-xl sm:text-2xl mt-0.5"></div>
-        <div class="text-xs opacity-75 mt-0.5">Kedudukan slot yang betul tidak didedahkan!</div>
-      </div>
-
-      <!-- Guessing Board Card -->
-      <div id="guessingBoardCard" class="glass-card rounded-3xl p-4 sm:p-6 space-y-5">
-        <div class="flex items-center justify-between">
-          <h3 class="font-display font-bold text-base sm:text-lg text-white">Susunan Tekaan Anda</h3>
-          <span id="guessDuplicateHint" class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300"></span>
+      <!-- 4. Active Guess Slots Stage (Centered & Responsive) -->
+      <div class="flex-1 min-h-0 glass-card rounded-2xl p-3 sm:p-4 flex flex-col justify-between gap-2">
+        <div class="flex items-center justify-between shrink-0">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Slot Tekaan Semasa</span>
+          <span id="guessDuplicateHint" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300">Mod Unik</span>
         </div>
 
-        <!-- Guess Slots Rack -->
-        <div id="guessSlotsContainer" class="flex flex-wrap items-center justify-center gap-2.5 sm:gap-4 py-1"></div>
+        <!-- Slots Rack -->
+        <div id="guessSlotsContainer" class="flex flex-wrap items-center justify-center gap-2 sm:gap-3.5 my-auto"></div>
 
-        <!-- Active Turn Controls -->
-        <div id="guessControlsWrapper" class="space-y-4">
-          <!-- Bottle Palette -->
-          <div id="guessBottlePalette" class="grid grid-cols-4 sm:grid-cols-7 gap-2 sm:gap-2.5"></div>
+        <!-- Bottle Selection Tray (Always visible without scrolling) -->
+        <div id="guessControlsWrapper" class="shrink-0 space-y-2">
+          <div id="guessBottlePalette" class="grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-2"></div>
+        </div>
 
-          <!-- Helper Action Row -->
-          <div class="grid grid-cols-3 gap-2">
-            <button id="copyPrevGuessBtn" type="button" disabled class="py-2.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none border border-slate-700 text-slate-200 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1 transition active:scale-95">
-              <span>📋</span> Salin Lepas
-            </button>
-            <button id="guessRandomBtn" type="button" class="py-2.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1 transition active:scale-95">
-              <span>🎲</span> Rawak
-            </button>
-            <button id="guessClearBtn" type="button" class="py-2.5 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-semibold text-xs sm:text-sm flex items-center justify-center gap-1 transition active:scale-95">
-              <span>🗑️</span> Kosongkan
-            </button>
+        <!-- Waiting Opponent Note (Shown only during opponent's turn) -->
+        <div id="waitingOpponentTurnNote" class="hidden shrink-0 py-3 px-4 rounded-xl bg-slate-900/80 border border-slate-700/80 text-center text-xs sm:text-sm text-amber-200 font-medium">
+          ⏳ Menunggu giliran pihak lawan selesai...
+        </div>
+      </div>
+
+      <!-- 5. Bottom Anchored Action & Quick Reaction Bar -->
+      <div class="shrink-0 space-y-2">
+        <!-- Quick Emoji Reactions -->
+        <div id="reactionButtonsBar" class="flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800">
+          <span class="text-[10px] font-bold uppercase text-slate-400 pl-1">Reaksi:</span>
+          <div class="flex items-center gap-1.5">
+            <button type="button" data-emoji="🔥" class="reaction-trigger w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-base flex items-center justify-center active:scale-90">🔥</button>
+            <button type="button" data-emoji="🤔" class="reaction-trigger w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-base flex items-center justify-center active:scale-90">🤔</button>
+            <button type="button" data-emoji="😱" class="reaction-trigger w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-base flex items-center justify-center active:scale-90">😱</button>
+            <button type="button" data-emoji="😂" class="reaction-trigger w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-base flex items-center justify-center active:scale-90">😂</button>
+            <button type="button" data-emoji="👏" class="reaction-trigger w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-base flex items-center justify-center active:scale-90">👏</button>
           </div>
+        </div>
 
-          <!-- Submit Guess Button -->
-          <button id="submitGuessBtn" type="button" disabled class="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 disabled:border disabled:border-slate-700 text-white font-display font-bold text-base shadow-lg shadow-sky-500/25 disabled:shadow-none transition active:scale-[0.98] flex items-center justify-center gap-2">
+        <!-- Primary Action Buttons Row -->
+        <div class="grid grid-cols-12 gap-2">
+          <button id="guessClearBtn" type="button" class="col-span-3 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-1 transition active:scale-95">
+            <span>🗑️</span><span>Kosong</span>
+          </button>
+          <button id="guessRandomBtn" type="button" class="col-span-3 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-1 transition active:scale-95">
+            <span>🎲</span><span>Rawak</span>
+          </button>
+          <button id="submitGuessBtn" type="button" disabled class="col-span-6 py-3 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-500 disabled:border disabled:border-slate-700 text-white font-display font-bold text-sm sm:text-base shadow-lg shadow-sky-500/25 disabled:shadow-none transition active:scale-[0.98] flex items-center justify-center gap-1.5">
             <span>Hantar Tekaan</span>
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
             </svg>
           </button>
         </div>
-
-        <!-- Waiting Opponent Overlay Note -->
-        <div id="waitingOpponentTurnNote" class="hidden p-4 rounded-2xl bg-slate-900/75 border border-slate-700/80 text-center text-sm text-slate-300">
-          ⏳ Sedang menunggu pihak lawan menghantar tekaan mereka...
-        </div>
-      </div>
-
-      <!-- Live Quick Reactions Bar -->
-      <div class="glass-card rounded-2xl p-3 flex items-center justify-between gap-2">
-        <span class="text-xs font-bold text-slate-400 pl-1 shrink-0">Reaksi Pantas:</span>
-        <div id="reactionButtonsBar" class="flex items-center justify-end gap-1.5 sm:gap-2 flex-wrap">
-          <button type="button" data-emoji="🔥" class="reaction-trigger w-10 h-10 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-lg flex items-center justify-center transition active:scale-90">🔥</button>
-          <button type="button" data-emoji="🤔" class="reaction-trigger w-10 h-10 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-lg flex items-center justify-center transition active:scale-90">🤔</button>
-          <button type="button" data-emoji="😱" class="reaction-trigger w-10 h-10 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-lg flex items-center justify-center transition active:scale-90">😱</button>
-          <button type="button" data-emoji="😂" class="reaction-trigger w-10 h-10 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-lg flex items-center justify-center transition active:scale-90">😂</button>
-          <button type="button" data-emoji="👏" class="reaction-trigger w-10 h-10 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-lg flex items-center justify-center transition active:scale-90">👏</button>
-          <button type="button" data-emoji="⚡" class="reaction-trigger w-10 h-10 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-lg flex items-center justify-center transition active:scale-90">⚡</button>
-        </div>
-      </div>
-
-      <!-- Guess History Panel (Rekod Tekaan) -->
-      <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-          <h3 class="font-display font-bold text-base sm:text-lg text-white">Rekod Tekaan</h3>
-          <div class="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-slate-900/90 border border-slate-800">
-            <button id="tabMyGuesses" type="button" class="px-3 py-1.5 rounded-lg bg-sky-500/20 text-sky-300 font-bold text-xs transition">
-              Tekaan Anda (<span id="myGuessCount">0</span>)
-            </button>
-            <button id="tabOppGuesses" type="button" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-white font-bold text-xs transition">
-              Tekaan Lawan (<span id="oppGuessCount">0</span>)
-            </button>
-          </div>
-        </div>
-
-        <div id="guessHistoryList" class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
-          <div class="text-center py-6 text-sm text-slate-500">Belum ada rekod tekaan lagi.</div>
-        </div>
       </div>
     </section>
 
-
-    <!-- ========================================================= -->
-    <!-- VIEW 5: VICTORY / REVEAL SCREEN (FINISHED)                -->
-    <!-- ========================================================= -->
-    <section id="viewFinished" class="hidden space-y-5 animate-pop-in">
-      <!-- Result Hero Banner -->
-      <div id="resultHeroCard" class="glass-card-glow rounded-3xl p-6 sm:p-8 text-center space-y-3">
-        <div id="resultIcon" class="text-5xl sm:text-6xl mx-auto">🏆</div>
-        <h2 id="resultHeadline" class="font-display font-bold text-3xl sm:text-4xl tracking-tight text-white">
+    <!-- =================================================================== -->
+    <!-- VIEW 5: VICTORY / SECRET REVEAL SCREEN                              -->
+    <!-- =================================================================== -->
+    <section id="viewFinished" class="hidden flex-1 max-w-3xl w-full mx-auto px-3.5 sm:px-5 py-5 flex flex-col justify-center space-y-4">
+      <div id="resultHeroCard" class="glass-card-glow rounded-3xl p-5 sm:p-7 text-center space-y-2.5">
+        <div id="resultIcon" class="text-5xl mx-auto">🏆</div>
+        <h2 id="resultHeadline" class="font-display font-bold text-2xl sm:text-4xl tracking-tight text-white">
           ANDA MENANG!
         </h2>
-        <p id="resultSubtext" class="text-sm sm:text-base text-slate-300 max-w-md mx-auto">
-          Tahniah! Anda berjaya memecahkan kod rahsia pihak lawan terlebih dahulu.
+        <p id="resultSubtext" class="text-xs sm:text-sm text-slate-300 max-w-md mx-auto">
+          Tahniah! Anda berjaya memecahkan susunan rahsia lawan terlebih dahulu.
         </p>
-        <div id="resultMatchMeta" class="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-slate-900/80 border border-slate-700 text-xs font-semibold text-slate-300"></div>
+        <div id="resultMatchMeta" class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-900/90 border border-slate-700 text-xs font-semibold text-slate-300"></div>
       </div>
 
       <!-- Secret Arrangements Side-by-Side Reveal -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- My Secret Reveal -->
-        <div class="glass-card rounded-2xl p-5 space-y-3 border-sky-500/30">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div class="glass-card rounded-2xl p-4 space-y-2.5 border-sky-500/35">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-wider text-sky-400">Susunan Rahsia Anda</span>
-            <span id="revealMyName" class="text-xs font-bold text-white">Pemain 1</span>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-sky-400">Kod Rahsia Anda</span>
+            <span id="revealMyName" class="text-xs font-bold text-white">Pemain</span>
           </div>
-          <div id="revealMySecretSlots" class="flex flex-wrap items-center justify-center gap-2 pt-1"></div>
+          <div id="revealMySecretSlots" class="flex flex-wrap items-center justify-center gap-2"></div>
         </div>
 
-        <!-- Opponent Secret Reveal -->
-        <div class="glass-card rounded-2xl p-5 space-y-3 border-purple-500/30">
+        <div class="glass-card rounded-2xl p-4 space-y-2.5 border-purple-500/35">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-bold uppercase tracking-wider text-purple-400">Susunan Rahsia Lawan</span>
-            <span id="revealOppName" class="text-xs font-bold text-white">Pemain 2</span>
+            <span class="text-[11px] font-bold uppercase tracking-wider text-purple-400">Kod Rahsia Lawan</span>
+            <span id="revealOppName" class="text-xs font-bold text-white">Lawan</span>
           </div>
-          <div id="revealOppSecretSlots" class="flex flex-wrap items-center justify-center gap-2 pt-1"></div>
+          <div id="revealOppSecretSlots" class="flex flex-wrap items-center justify-center gap-2"></div>
         </div>
       </div>
 
-      <!-- Rematch & Back to Lobby Actions -->
-      <div class="flex flex-col sm:flex-row gap-3 pt-2">
-        <button id="rematchBtn" type="button" class="flex-1 py-4 px-6 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-display font-bold text-base sm:text-lg shadow-lg shadow-emerald-500/25 transition active:scale-[0.98] flex items-center justify-center gap-2">
-          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-          </svg>
-          <span>Main Semula (Rematch)</span>
+      <!-- Rematch & Lobby Actions -->
+      <div class="flex flex-col sm:flex-row gap-2.5 pt-1">
+        <button id="rematchBtn" type="button" class="flex-1 py-3.5 px-5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-display font-bold text-base shadow-lg shadow-emerald-500/25 transition active:scale-[0.98] flex items-center justify-center gap-2">
+          <span>🔄 Main Semula (Rematch)</span>
         </button>
-        <button id="finishLeaveBtn" type="button" class="py-4 px-6 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-display font-bold text-base transition active:scale-[0.98]">
+        <button id="finishLeaveBtn" type="button" class="py-3.5 px-5 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-display font-bold text-base transition active:scale-[0.98]">
           Kembali ke Lobi
         </button>
       </div>
     </section>
+  </div>
 
-  </main>
+  <!-- ===================================================================== -->
+  <!-- SLIDE-OVER DRAWER: "TEKAAN LEPAS" & SEJARAH (STRICTLY HIDDEN CLOSED)  -->
+  <!-- ===================================================================== -->
+  <div id="lastGuessDrawerBackdrop" class="hidden fixed inset-0 z-40 bg-slate-950/80 backdrop-blur-sm"></div>
 
-  <!-- Firebase & Game Logic Module -->
+  <aside id="lastGuessDrawer" class="hidden fixed inset-y-0 right-0 z-50 w-full max-w-md bg-slate-900 border-l border-slate-700/90 shadow-2xl flex flex-col">
+    <!-- Drawer Header -->
+    <div class="shrink-0 px-4 py-3.5 border-b border-slate-800 flex items-center justify-between">
+      <div>
+        <h3 class="font-display font-bold text-lg text-white">Tekaan Lepas &amp; Rekod</h3>
+        <p class="text-[11px] text-slate-400">Semak susunan terdahulu tanpa mengganggu papan</p>
+      </div>
+      <button id="closeLastGuessDrawerBtn" type="button" aria-label="Tutup Panel" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-bold flex items-center justify-center">
+        ✕
+      </button>
+    </div>
+
+    <!-- Drawer Scrollable Body -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-4">
+
+      <!-- Highlight Card: Player's Very Last Guess -->
+      <div class="rounded-2xl bg-slate-950/90 border border-sky-500/40 p-3.5 space-y-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-sky-400">Pilihan Terakhir Anda</span>
+          <span id="drawerLastScoreBadge" class="px-2.5 py-0.5 rounded-full bg-sky-500/20 border border-sky-400/40 font-display font-bold text-xs text-sky-200">
+            Tiada lagi
+          </span>
+        </div>
+
+        <div id="drawerLastBottlesRow" class="flex flex-wrap items-center justify-center gap-2 py-1">
+          <span class="text-xs text-slate-500 py-2">Anda belum menghantar sebarang tekaan.</span>
+        </div>
+
+        <button id="drawerCopyLastBtn" type="button" disabled class="w-full py-2.5 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 disabled:bg-slate-800 disabled:text-slate-500 text-white font-display font-bold text-xs sm:text-sm transition active:scale-[0.98]">
+          📋 Salin Ke Slot Semasa &amp; Tutup
+        </button>
+      </div>
+
+      <!-- Collapsible Secret Code Peek -->
+      <div class="rounded-2xl bg-slate-950/75 border border-slate-800 p-3">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-slate-300">Kod Rahsia Anda</span>
+          <button id="togglePeekSecretBtn" type="button" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-amber-300">
+            👁️ Intip Kod
+          </button>
+        </div>
+        <div id="drawerMySecretReveal" class="hidden flex flex-wrap items-center justify-center gap-1.5 mt-3 pt-2.5 border-t border-slate-800"></div>
+      </div>
+
+      <!-- Full Guess History Tabs -->
+      <div class="space-y-2.5">
+        <div class="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-slate-950 border border-slate-800">
+          <button id="tabMyGuesses" type="button" class="py-2 rounded-lg bg-sky-500/20 text-sky-300 font-bold text-xs transition">
+            Tekaan Anda (<span id="myGuessCount">0</span>)
+          </button>
+          <button id="tabOppGuesses" type="button" class="py-2 rounded-lg text-slate-400 hover:text-white font-bold text-xs transition">
+            Tekaan Lawan (<span id="oppGuessCount">0</span>)
+          </button>
+        </div>
+
+        <div id="guessHistoryList" class="space-y-2">
+          <div class="text-center py-6 text-xs text-slate-500">Belum ada rekod tekaan lagi.</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================================================================== -->
+  <!-- APPLICATION SCRIPT (ALL EVENT LISTENERS & AI ENGINE)                  -->
+  <!-- ===================================================================== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
     import { getDatabase, ref, set, get, update, onValue, push, serverTimestamp, off } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     // =========================================================================
-    // 1. FIREBASE INITIALIZATION
-    // =========================================================================
-    const firebaseConfig = {
-      apiKey: "AIzaSyBjXUkqx3oQ_WtY6-6HTQcG1DBYApin1jg",
-      authDomain: "dashboardcendawan.firebaseapp.com",
-      databaseURL: "https://dashboardcendawan-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "dashboardcendawan",
-      storageBucket: "dashboardcendawan.firebasestorage.app",
-      messagingSenderId: "212950743683",
-      appId: "1:212950743683:web:c9ab456bbd9e98802db9b6"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getDatabase(app);
-    const ROOT_PATH = "bottle_duel_rooms";
-
-    // =========================================================================
-    // 2. DISTINCT 7 BOTTLE DEFINITIONS (UNIQUE SILHOUETTE + COLOR + LABEL)
+    // 1. 7 DISTINCT COLORBLIND-FRIENDLY BOTTLES
     // =========================================================================
     const BOTTLES = [
       {
         id: "delima",
         name: "Delima",
-        color: "#EF4444",
-        border: "border-red-500/60",
+        border: "border-red-500/70",
         bgSoft: "bg-red-500/15",
         text: "text-red-300",
-        // Round Potion Flask
-        svg: `
-          <svg viewBox="0 0 64 64" class="w-full h-full drop-shadow">
-            <rect x="27" y="5" width="10" height="7" rx="2" fill="url(#grad-cork)"/>
-            <rect x="25" y="11" width="14" height="8" rx="2" fill="#E2E8F0" fill-opacity="0.35" stroke="#F8FAFC" stroke-width="1.5"/>
-            <circle cx="32" cy="39" r="19" fill="url(#grad-delima)" stroke="#FCA5A5" stroke-width="1.8"/>
-            <path d="M21 31 A12 12 0 0 1 32 23" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
-            <circle cx="38" cy="44" r="2.2" fill="#FFFFFF" opacity="0.45"/>
-          </svg>`
+        // Tall Crimson Flask
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full">
+          <rect x="27" y="4" width="10" height="6" rx="1.5" fill="url(#grad-cork)"/>
+          <rect x="25" y="10" width="14" height="8" rx="2" fill="#E2E8F0" fill-opacity="0.35" stroke="#F8FAFC" stroke-width="1.5"/>
+          <path d="M22 22 C22 18, 42 18, 42 22 L44 54 C44 57, 41 59, 38 59 L26 59 C23 59, 20 57, 20 54 Z" fill="url(#grad-delima)" stroke="#FCA5A5" stroke-width="1.8"/>
+          <line x1="26" y1="25" x2="25" y2="52" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" opacity="0.7"/>
+        </svg>`
       },
       {
         id: "safir",
         name: "Safir",
-        color: "#3B82F6",
-        border: "border-blue-500/60",
+        border: "border-blue-500/70",
         bgSoft: "bg-blue-500/15",
         text: "text-blue-300",
-        // Tall Cylinder Bottle
-        svg: `
-          <svg viewBox="0 0 64 64" class="w-full h-full drop-shadow">
-            <rect x="27" y="4" width="10" height="6" rx="1.5" fill="url(#grad-cork)"/>
-            <rect x="26" y="10" width="12" height="7" rx="1.5" fill="#E2E8F0" fill-opacity="0.35" stroke="#F8FAFC" stroke-width="1.5"/>
-            <path d="M21 22 C21 18, 43 18, 43 22 L43 54 C43 57, 40 59, 37 59 L27 59 C24 59, 21 57, 21 54 Z" fill="url(#grad-safir)" stroke="#93C5FD" stroke-width="1.8"/>
-            <line x1="26" y1="25" x2="26" y2="52" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.65"/>
-          </svg>`
+        // Cobalt Round Potion
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full">
+          <rect x="27" y="5" width="10" height="7" rx="2" fill="url(#grad-cork)"/>
+          <rect x="25" y="11" width="14" height="8" rx="2" fill="#E2E8F0" fill-opacity="0.35" stroke="#F8FAFC" stroke-width="1.5"/>
+          <circle cx="32" cy="39" r="19" fill="url(#grad-safir)" stroke="#93C5FD" stroke-width="1.8"/>
+          <path d="M21 31 A12 12 0 0 1 32 23" fill="none" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+        </svg>`
       },
       {
         id: "zamrud",
         name: "Zamrud",
-        color: "#10B981",
-        border: "border-emerald-500/60",
+        border: "border-emerald-500/70",
         bgSoft: "bg-emerald-500/15",
         text: "text-emerald-300",
-        // Triangle Erlenmeyer Flask
-        svg: `
-          <svg viewBox="0 0 64 64" class="w-full h-full drop-shadow">
-            <rect x="27" y="5" width="10" height="6" rx="1.5" fill="url(#grad-cork)"/>
-            <rect x="26" y="11" width="12" height="9" rx="1" fill="#E2E8F0" fill-opacity="0.35" stroke="#F8FAFC" stroke-width="1.5"/>
-            <path d="M26 20 L12 52 C10.5 55.5, 13 59, 17 59 L47 59 C51 59, 53.5 55.5, 52 52 L38 20 Z" fill="url(#grad-zamrud)" stroke="#6EE7B7" stroke-width="1.8" stroke-linejoin="round"/>
-            <line x1="27" y1="27" x2="18" y2="50" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" opacity="0.65"/>
-          </svg>`
+        // Emerald Square Apothecary
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full">
+          <rect x="24" y="5" width="16" height="7" rx="2" fill="url(#grad-cork)"/>
+          <rect x="22" y="12" width="20" height="6" rx="1.5" fill="#E2E8F0" fill-opacity="0.35" stroke="#F8FAFC" stroke-width="1.5"/>
+          <rect x="14" y="18" width="36" height="40" rx="7" fill="url(#grad-zamrud)" stroke="#6EE7B7" stroke-width="1.8"/>
+          <line x1="20" y1="24" x2="20" y2="51" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.65"/>
+        </svg>`
       },
       {
         id: "amber",
         name: "Amber",
-        color: "#F59E0B",
-        border: "border-amber-500/60",
+        border: "border-amber-500/70",
         bgSoft: "bg-amber-500/15",
         text: "text-amber-300",
-        // Hexagon Diamond Vial
-        svg: `
-          <svg viewBox="0 0 64 64" class="w-full h-full drop-shadow">
-            <rect x="27" y="4" width="10" height="6" rx="1.5" fill="url(#grad-cork)"/>
-            <rect x="26" y="10" width="12" height="6" rx="1" fill="#E2E8F0" fill-opacity="0.35" stroke="#F8FAFC" stroke-width="1.5"/>
-            <polygon points="32,16 50,28 50,47 32,59 14,47 14,28" fill="url(#grad-amber)" stroke="#FDE68A" stroke-width="1.8" stroke-linejoin="round"/>
-            <polyline points="20,30 32,22 44,30" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" opacity="0.7"/>
-          </svg>`
+        // Gold Triangle Vial
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full">
+          <rect x="27" y="5" width="10" height="6" rx="1.5" fill="url(#grad-cork)"/>
+          <rect x="26" y="11" width="12" height="9" rx="1" fill="#E2E8F0" fill-opacity="0.35" stroke="#F8FAFC" stroke-width="1.5"/>
+          <path d="M26 20 L12 52 C10.5 55.5, 13 59, 17 59 L47 59 C51 59, 53.5 55.5, 52 52 L38 20 Z" fill="url(#grad-amber)" stroke="#FDE68A" stroke-width="1.8" stroke-linejoin="round"/>
+          <line x1="27" y1="27" x2="18" y2="50" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" opacity="0.65"/>
+        </svg>`
       },
       {
         id: "kecubung",
         name: "Kecubung",
-        color: "#A855F7",
-        border: "border-purple-500/60",
+        border: "border-purple-500/70",
         bgSoft: "bg-purple-500/15",
         text: "text-purple-300",
-        // Hourglass Amphora
-        svg: `
-          <svg viewBox="0 0 64 64" class="w-full h-full drop-shadow">
-            <rect x="27" y="4" width="10" height="6" rx="1.5" fill="url(#grad-cork)"/>
-            <rect x="25" y="10" width="14" height="6" rx="2" fill="#E2E8F0" fill-opacity="0.35" stroke="#F8FAFC" stroke-width="1.5"/>
-            <path d="M23 16 C14 21, 15 31, 24 36 C14 41, 14 54, 24 58 L40 58 C50 54, 50 41, 40 36 C49 31, 50 21, 41 16 Z" fill="url(#grad-kecubung)" stroke="#D8B4FE" stroke-width="1.8"/>
-            <path d="M23 21 C19 24, 19 29, 24 32" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" opacity="0.65"/>
-          </svg>`
+        // Violet Amphora
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full">
+          <rect x="27" y="4" width="10" height="6" rx="1.5" fill="url(#grad-cork)"/>
+          <rect x="25" y="10" width="14" height="6" rx="2" fill="#E2E8F0" fill-opacity="0.35" stroke="#F8FAFC" stroke-width="1.5"/>
+          <path d="M23 16 C14 21, 15 31, 24 36 C14 41, 14 54, 24 58 L40 58 C50 54, 50 41, 40 36 C49 31, 50 21, 41 16 Z" fill="url(#grad-kecubung)" stroke="#D8B4FE" stroke-width="1.8"/>
+          <path d="M23 21 C19 24, 19 29, 24 32" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" opacity="0.65"/>
+        </svg>`
       },
       {
         id: "koral",
         name: "Koral",
-        color: "#F97316",
-        border: "border-orange-500/60",
+        border: "border-orange-500/70",
         bgSoft: "bg-orange-500/15",
         text: "text-orange-300",
-        // Square Apothecary Jar
-        svg: `
-          <svg viewBox="0 0 64 64" class="w-full h-full drop-shadow">
-            <rect x="24" y="5" width="16" height="7" rx="2" fill="url(#grad-cork)"/>
-            <rect x="22" y="12" width="20" height="6" rx="1.5" fill="#E2E8F0" fill-opacity="0.35" stroke="#F8FAFC" stroke-width="1.5"/>
-            <rect x="14" y="18" width="36" height="40" rx="7" fill="url(#grad-koral)" stroke="#FDBA74" stroke-width="1.8"/>
-            <line x1="20" y1="24" x2="20" y2="51" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" opacity="0.65"/>
-          </svg>`
+        // Orange Gourd Bottle
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full">
+          <rect x="27" y="4" width="10" height="6" rx="1.5" fill="url(#grad-cork)"/>
+          <circle cx="32" cy="21" r="10" fill="url(#grad-koral)" stroke="#FDBA74" stroke-width="1.6"/>
+          <circle cx="32" cy="43" r="16" fill="url(#grad-koral)" stroke="#FDBA74" stroke-width="1.8"/>
+          <path d="M23 37 A9 9 0 0 1 32 31" fill="none" stroke="#FFFFFF" stroke-width="2.3" stroke-linecap="round" opacity="0.7"/>
+        </svg>`
       },
       {
         id: "pirus",
         name: "Pirus",
-        color: "#06B6D4",
-        border: "border-cyan-500/60",
+        border: "border-cyan-500/70",
         bgSoft: "bg-cyan-500/15",
         text: "text-cyan-300",
-        // Slim Lab Test-Tube
-        svg: `
-          <svg viewBox="0 0 64 64" class="w-full h-full drop-shadow">
-            <rect x="26" y="4" width="12" height="6" rx="1.5" fill="url(#grad-cork)"/>
-            <rect x="22" y="10" width="20" height="4" rx="2" fill="#E2E8F0" fill-opacity="0.5" stroke="#F8FAFC" stroke-width="1.4"/>
-            <path d="M24 14 L24 49 A8 8 0 0 0 40 49 L40 14 Z" fill="url(#grad-pirus)" stroke="#67E8F9" stroke-width="1.8"/>
-            <line x1="28" y1="19" x2="28" y2="48" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" opacity="0.75"/>
-          </svg>`
+        // Cyan Twin-Neck Flask
+        svg: `<svg viewBox="0 0 64 64" class="w-full h-full">
+          <rect x="20" y="7" width="8" height="12" rx="2" fill="#E2E8F0" fill-opacity="0.4" stroke="#F8FAFC" stroke-width="1.4"/>
+          <rect x="36" y="7" width="8" height="12" rx="2" fill="#E2E8F0" fill-opacity="0.4" stroke="#F8FAFC" stroke-width="1.4"/>
+          <polygon points="32,16 50,28 50,48 32,59 14,48 14,28" fill="url(#grad-pirus)" stroke="#67E8F9" stroke-width="1.8" stroke-linejoin="round"/>
+          <polyline points="20,30 32,22 44,30" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" opacity="0.75"/>
+        </svg>`
       }
     ];
 
     const BOTTLE_MAP = Object.fromEntries(BOTTLES.map(b => [b.id, b]));
+    const BOTTLE_IDS = BOTTLES.map(b => b.id);
 
     // =========================================================================
-    // 3. PROCEDURAL WEB AUDIO API SOUND EFFECTS
+    // 2. PROCEDURAL WEB AUDIO SOUND ENGINE
     // =========================================================================
     class SoundEngine {
       constructor() {
@@ -933,7 +958,7 @@
         return this.muted;
       }
 
-      tone(freq, type = "sine", duration = 0.12, gainVal = 0.16, delay = 0, freqEnd = null) {
+      tone(freq, type = "sine", duration = 0.11, gainVal = 0.15, delay = 0, freqEnd = null) {
         if (this.muted) return;
         try {
           this.init();
@@ -943,75 +968,130 @@
           const gain = this.ctx.createGain();
           osc.type = type;
           osc.frequency.setValueAtTime(freq, now);
-          if (freqEnd) {
-            osc.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
-          }
+          if (freqEnd) osc.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
           gain.gain.setValueAtTime(0.0001, now);
-          gain.gain.linearRampToValueAtTime(gainVal, now + 0.012);
+          gain.gain.linearRampToValueAtTime(gainVal, now + 0.01);
           gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
           osc.connect(gain);
           gain.connect(this.ctx.destination);
           osc.start(now);
           osc.stop(now + duration + 0.02);
-        } catch (e) {
-          // Ignore audio errors on restricted devices
-        }
+        } catch (e) {}
       }
 
       playPlace() {
-        // Glass clink + crisp pop
-        this.tone(1180, "sine", 0.11, 0.14, 0, 1420);
-        this.tone(2360, "triangle", 0.06, 0.06, 0.01);
+        this.tone(1180, "sine", 0.1, 0.14, 0, 1440);
+        this.tone(2350, "triangle", 0.05, 0.05, 0.01);
       }
 
       playRemove() {
-        this.tone(540, "sine", 0.11, 0.12, 0, 310);
+        this.tone(520, "sine", 0.1, 0.11, 0, 300);
       }
 
       playClick() {
-        this.tone(760, "sine", 0.045, 0.08);
+        this.tone(760, "sine", 0.04, 0.08);
       }
 
       playSubmit() {
-        this.tone(440, "triangle", 0.12, 0.14, 0);
-        this.tone(660, "triangle", 0.16, 0.14, 0.07);
+        this.tone(440, "triangle", 0.11, 0.14, 0);
+        this.tone(660, "triangle", 0.15, 0.14, 0.07);
       }
 
       playFeedback(correct, prevBest, total) {
         if (correct === total) {
           this.playVictory();
         } else if (correct > prevBest) {
-          // Rising celebratory chime
-          this.tone(523.25, "sine", 0.15, 0.16, 0);
-          this.tone(659.25, "sine", 0.15, 0.16, 0.09);
-          this.tone(783.99, "sine", 0.24, 0.18, 0.18);
+          this.tone(523.25, "sine", 0.14, 0.16, 0);
+          this.tone(659.25, "sine", 0.14, 0.16, 0.08);
+          this.tone(783.99, "sine", 0.22, 0.18, 0.16);
         } else if (correct > 0) {
-          this.tone(523.25, "sine", 0.12, 0.14, 0);
-          this.tone(659.25, "sine", 0.16, 0.14, 0.08);
+          this.tone(523.25, "sine", 0.12, 0.13, 0);
+          this.tone(659.25, "sine", 0.15, 0.13, 0.08);
         } else {
-          // Neutral low soft thud
-          this.tone(165, "triangle", 0.22, 0.18, 0, 105);
+          this.tone(165, "triangle", 0.2, 0.16, 0, 105);
         }
       }
 
       playTick() {
-        this.tone(920, "square", 0.04, 0.07);
+        this.tone(920, "square", 0.035, 0.06);
       }
 
       playVictory() {
-        const notes = [523.25, 659.25, 783.99, 1046.50];
-        notes.forEach((n, idx) => {
-          this.tone(n, "triangle", 0.24, 0.18, idx * 0.1);
-          this.tone(n * 1.5, "sine", 0.24, 0.08, idx * 0.1);
+        [523.25, 659.25, 783.99, 1046.50].forEach((n, i) => {
+          this.tone(n, "triangle", 0.22, 0.17, i * 0.09);
         });
       }
 
       playReaction() {
-        this.tone(620, "sine", 0.09, 0.1, 0, 960);
+        this.tone(620, "sine", 0.08, 0.1, 0, 960);
       }
     }
 
     const sfx = new SoundEngine();
+
+    // =========================================================================
+    // 3. NON-BLOCKING FIREBASE INITIALIZATION
+    // =========================================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyBjXUkqx3oQ_WtY6-6HTQcG1DBYApin1jg",
+      authDomain: "dashboardcendawan.firebaseapp.com",
+      databaseURL: "https://dashboardcendawan-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "dashboardcendawan",
+      storageBucket: "dashboardcendawan.firebasestorage.app",
+      messagingSenderId: "212950743683",
+      appId: "1:212950743683:web:c9ab456bbd9e98802db9b6"
+    };
+
+    const ROOT_PATH = "bottle_duel_rooms";
+    let app = null;
+    let auth = null;
+    let db = null;
+
+    function updateAuthBadge(status, detail = "") {
+      const dot = document.getElementById("authStatusDot");
+      const text = document.getElementById("authStatusText");
+      const banner = document.getElementById("authErrorBanner");
+      if (!dot || !text) return;
+
+      if (status === "online") {
+        dot.className = "w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]";
+        text.className = "truncate max-w-[130px] sm:max-w-none text-emerald-300";
+        text.textContent = `Online • ${detail.slice(0, 5)}`;
+        if (banner) banner.classList.add("hidden");
+      } else if (status === "connecting") {
+        dot.className = "w-2 h-2 rounded-full bg-sky-400 animate-pulse";
+        text.className = "truncate max-w-[130px] sm:max-w-none text-sky-300";
+        text.textContent = "Bot Sedia • Sync...";
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-amber-400";
+        text.className = "truncate max-w-[130px] sm:max-w-none text-amber-300";
+        text.textContent = "Bot Sedia (Offline)";
+        if (detail === "auth/operation-not-allowed" && banner) {
+          banner.classList.remove("hidden");
+        }
+      }
+    }
+
+    async function initFirebaseNonBlocking() {
+      updateAuthBadge("connecting");
+      try {
+        app = initializeApp(firebaseConfig);
+        auth = getAuth(app);
+        db = getDatabase(app);
+
+        onAuthStateChanged(auth, (user) => {
+          if (user) {
+            state.uid = user.uid;
+            updateAuthBadge("online", user.uid);
+          }
+        });
+
+        await signInAnonymously(auth);
+      } catch (err) {
+        console.warn("Firebase non-blocking init info:", err?.code || err?.message);
+        updateAuthBadge("offline", err?.code || "offline");
+      }
+    }
 
     // =========================================================================
     // 4. APPLICATION STATE
@@ -1019,74 +1099,151 @@
     const state = {
       uid: null,
       nickname: localStorage.getItem("duel_botol_nickname") || "Pemain",
-      roomCode: null,
-      role: null, // 'host' | 'challenger'
-      roomRef: null,
-      roomListener: null,
-      roomData: null,
+      gameMode: "bot", // 'bot' | 'online'
+      botDifficulty: "tactical", // 'casual' | 'tactical' | 'mastermind'
 
-      // Lobby Settings
-      hostSettings: {
+      // Match Settings
+      settings: {
         slots: 4,
         allowDuplicates: false,
         winRule: "instant",
         turnTime: 30
       },
 
-      // Local interactive slot arrays
+      // Active Room / Match State
+      roomCode: null,
+      role: "host", // 'host' | 'challenger'
+      roomRef: null,
+      roomListener: null,
+      roomData: null,
+
+      // Interactive Slot Arrays
       setupSlots: [],
       setupActiveIdx: 0,
       guessSlots: [],
       guessActiveIdx: 0,
 
       // UI & Tracking
-      activeHistoryTab: "mine", // 'mine' | 'opp'
+      activeHistoryTab: "mine",
       lastSeenFeedbackId: null,
       lastSeenReactionId: null,
       lastTickSecond: null,
       isSubmittingGuess: false,
       isTransitioningGame: false,
       reactionCooldown: false,
-      timerInterval: null
+      timerInterval: null,
+      botThinkTimeout: null
     };
 
     // =========================================================================
-    // 5. DOM REFERENCES & HELPERS
+    // 5. SMART AI BOT ENGINE (CASUAL / TACTICAL / MASTERMIND)
+    // =========================================================================
+    function countExactMatches(arrA, arrB) {
+      let c = 0;
+      for (let i = 0; i < arrA.length; i++) {
+        if (arrA[i] === arrB[i]) c++;
+      }
+      return c;
+    }
+
+    function generateRandomLineup(slotCount, allowDuplicates) {
+      if (allowDuplicates) {
+        return Array.from({ length: slotCount }, () => BOTTLE_IDS[Math.floor(Math.random() * BOTTLE_IDS.length)]);
+      }
+      const pool = [...BOTTLE_IDS];
+      for (let i = pool.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [pool[i], pool[j]] = [pool[j], pool[i]];
+      }
+      return pool.slice(0, slotCount);
+    }
+
+    function computeBotNextGuess(slotCount, allowDuplicates, difficulty, botPastGuesses) {
+      // First turn: always random valid opening
+      if (!botPastGuesses || botPastGuesses.length === 0) {
+        return generateRandomLineup(slotCount, allowDuplicates);
+      }
+
+      const pastSet = new Set(botPastGuesses.map(g => g.guess.join(",")));
+
+      // CASUAL: Keeps 1-2 items from its best previous guess if any, randomizes rest
+      if (difficulty === "casual") {
+        const best = [...botPastGuesses].sort((a, b) => b.correct - a.correct)[0];
+        if (best && best.correct > 0) {
+          const candidate = generateRandomLineup(slotCount, allowDuplicates);
+          const keepIdx = Math.floor(Math.random() * slotCount);
+          const bottleToKeep = best.guess[keepIdx];
+          if (!allowDuplicates) {
+            const existingPos = candidate.indexOf(bottleToKeep);
+            if (existingPos !== -1) {
+              [candidate[keepIdx], candidate[existingPos]] = [candidate[existingPos], candidate[keepIdx]];
+            } else {
+              candidate[keepIdx] = bottleToKeep;
+            }
+          } else {
+            candidate[keepIdx] = bottleToKeep;
+          }
+          if (!pastSet.has(candidate.join(","))) return candidate;
+        }
+        return generateRandomLineup(slotCount, allowDuplicates);
+      }
+
+      // TACTICAL & MASTERMIND: Constraint-satisfaction search
+      const constraints = difficulty === "tactical"
+        ? botPastGuesses.slice(0, 3) // checks latest 3 constraints
+        : botPastGuesses;            // checks ALL constraints
+
+      const satisfiesAll = (cand) => {
+        if (pastSet.has(cand.join(","))) return false;
+        for (let i = 0; i < constraints.length; i++) {
+          if (countExactMatches(cand, constraints[i].guess) !== constraints[i].correct) {
+            return false;
+          }
+        }
+        return true;
+      };
+
+      // For slots <= 5, enumerate full search space quickly
+      if (slotCount <= 5) {
+        const validCandidates = [];
+        const current = [];
+
+        function dfs(depth, usedMask) {
+          if (validCandidates.length >= 2500 && difficulty === "tactical") return;
+          if (depth === slotCount) {
+            if (satisfiesAll(current)) {
+              validCandidates.push([...current]);
+            }
+            return;
+          }
+          for (let i = 0; i < BOTTLE_IDS.length; i++) {
+            if (!allowDuplicates && (usedMask & (1 << i))) continue;
+            current.push(BOTTLE_IDS[i]);
+            dfs(depth + 1, usedMask | (1 << i));
+            current.pop();
+          }
+        }
+
+        dfs(0, 0);
+        if (validCandidates.length > 0) {
+          return validCandidates[Math.floor(Math.random() * validCandidates.length)];
+        }
+      } else {
+        // For 6 slots: high-speed Monte Carlo + local mutation search
+        for (let attempt = 0; attempt < 35000; attempt++) {
+          const cand = generateRandomLineup(slotCount, allowDuplicates);
+          if (satisfiesAll(cand)) return cand;
+        }
+      }
+
+      // Fallback random unseen guess
+      return generateRandomLineup(slotCount, allowDuplicates);
+    }
+
+    // =========================================================================
+    // 6. UI HELPERS, TOASTS & DRAWER CONTROLS
     // =========================================================================
     const $ = (id) => document.getElementById(id);
-
-    function showToast(msg, type = "info") {
-      const container = $("toastContainer");
-      const el = document.createElement("div");
-      const colors = {
-        info: "bg-slate-800/95 border-sky-500/50 text-sky-100",
-        success: "bg-emerald-950/95 border-emerald-500/60 text-emerald-100",
-        warn: "bg-amber-950/95 border-amber-500/60 text-amber-100",
-        error: "bg-rose-950/95 border-rose-500/60 text-rose-100"
-      };
-      el.className = `pointer-events-auto px-4 py-2.5 rounded-xl border shadow-xl text-xs sm:text-sm font-semibold backdrop-blur-md animate-pop-in ${colors[type] || colors.info}`;
-      el.textContent = msg;
-      container.appendChild(el);
-      setTimeout(() => {
-        el.style.opacity = "0";
-        el.style.transform = "translateY(-8px)";
-        el.style.transition = "all 0.25s ease";
-        setTimeout(() => el.remove(), 260);
-      }, 2800);
-    }
-
-    function showFloatingReaction(emoji, senderName) {
-      const overlay = $("reactionOverlay");
-      const bubble = document.createElement("div");
-      bubble.className = "reaction-bubble flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 border border-sky-400/50 shadow-2xl backdrop-blur-md";
-      bubble.innerHTML = `
-        <span class="text-2xl">${emoji}</span>
-        <span class="text-xs font-bold text-slate-200">${escapeHtml(senderName)}</span>
-      `;
-      overlay.appendChild(bubble);
-      sfx.playReaction();
-      setTimeout(() => bubble.remove(), 2650);
-    }
 
     function escapeHtml(str) {
       return String(str || "")
@@ -1096,11 +1253,43 @@
         .replace(/"/g, "&quot;");
     }
 
-    function switchView(viewName) {
-      const views = ["viewLobby", "viewWaiting", "viewSetup", "viewPlaying", "viewFinished"];
-      views.forEach(v => {
-        const el = $(v);
-        if (v === viewName) {
+    function showToast(msg, type = "info") {
+      const container = $("toastContainer");
+      if (!container) return;
+      const el = document.createElement("div");
+      const styles = {
+        info: "bg-slate-800/95 border-sky-500/50 text-sky-100",
+        success: "bg-emerald-950/95 border-emerald-500/60 text-emerald-100",
+        warn: "bg-amber-950/95 border-amber-500/60 text-amber-100",
+        error: "bg-rose-950/95 border-rose-500/60 text-rose-100"
+      };
+      el.className = `px-3.5 py-2 rounded-xl border shadow-xl text-xs sm:text-sm font-semibold backdrop-blur-md animate-pop-in ${styles[type] || styles.info}`;
+      el.textContent = msg;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = "0";
+        el.style.transition = "opacity 0.2s ease";
+        setTimeout(() => el.remove(), 220);
+      }, 2400);
+    }
+
+    function showFloatingReaction(emoji, senderName) {
+      const overlay = $("reactionOverlay");
+      if (!overlay) return;
+      const bubble = document.createElement("div");
+      bubble.className = "reaction-bubble flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/95 border border-sky-400/50 shadow-2xl";
+      bubble.innerHTML = `<span class="text-xl">${emoji}</span><span class="text-xs font-bold text-slate-200">${escapeHtml(senderName)}</span>`;
+      overlay.appendChild(bubble);
+      sfx.playReaction();
+      setTimeout(() => bubble.remove(), 2450);
+    }
+
+    function switchView(viewId) {
+      closeLastGuessDrawer();
+      ["viewLobby", "viewWaiting", "viewSetup", "viewPlaying", "viewFinished"].forEach(id => {
+        const el = $(id);
+        if (!el) return;
+        if (id === viewId) {
           el.classList.remove("hidden");
         } else {
           el.classList.add("hidden");
@@ -1108,33 +1297,18 @@
       });
     }
 
-    function generateRoomCode() {
-      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-      let code = "";
-      for (let i = 0; i < 5; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return code;
+    function openLastGuessDrawer() {
+      sfx.playClick();
+      renderLastGuessDrawer();
+      $("lastGuessDrawerBackdrop").classList.remove("hidden");
+      $("lastGuessDrawer").classList.remove("hidden");
     }
 
-    function generateRandomLineup(slotCount, allowDuplicates) {
-      const ids = BOTTLES.map(b => b.id);
-      const result = [];
-      if (allowDuplicates) {
-        for (let i = 0; i < slotCount; i++) {
-          result.push(ids[Math.floor(Math.random() * ids.length)]);
-        }
-      } else {
-        const pool = [...ids];
-        for (let i = pool.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [pool[i], pool[j]] = [pool[j], pool[i]];
-        }
-        for (let i = 0; i < slotCount; i++) {
-          result.push(pool[i]);
-        }
-      }
-      return result;
+    function closeLastGuessDrawer() {
+      const backdrop = $("lastGuessDrawerBackdrop");
+      const drawer = $("lastGuessDrawer");
+      if (backdrop) backdrop.classList.add("hidden");
+      if (drawer) drawer.classList.add("hidden");
     }
 
     function copyTextToClipboard(text) {
@@ -1147,67 +1321,18 @@
       ta.select();
       try {
         document.execCommand("copy");
-        showToast(`Kod bilik "${text}" berjaya disalin!`, "success");
+        showToast(`Kod bilik "${text}" disalin!`, "success");
       } catch (e) {
-        showToast("Gagal menyalin secara automatik.", "warn");
+        showToast("Sila salin kod secara manual.", "warn");
       }
       document.body.removeChild(ta);
     }
 
     // =========================================================================
-    // 6. AUTHENTICATION FLOW (ANONYMOUS)
+    // 7. EVENT BINDINGS & LOBBY SETUP
     // =========================================================================
-    function updateAuthUI(status, detail = "") {
-      const dot = $("authStatusDot");
-      const text = $("authStatusText");
-      const banner = $("authErrorBanner");
-
-      if (status === "connected") {
-        dot.className = "w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_#34d399]";
-        text.className = "truncate max-w-[140px] sm:max-w-none text-emerald-300";
-        text.textContent = `Online • UID ${detail.slice(0, 5)}`;
-        banner.classList.add("hidden");
-      } else if (status === "connecting") {
-        dot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse";
-        text.className = "truncate max-w-[140px] sm:max-w-none text-amber-300";
-        text.textContent = "Menyambung...";
-      } else {
-        dot.className = "w-2 h-2 rounded-full bg-rose-500";
-        text.className = "truncate max-w-[140px] sm:max-w-none text-rose-300";
-        text.textContent = "Auth Tidak Aktif";
-        if (detail === "auth/operation-not-allowed") {
-          banner.classList.remove("hidden");
-        }
-      }
-    }
-
-    async function initAnonymousAuth() {
-      updateAuthUI("connecting");
-      try {
-        await signInAnonymously(auth);
-      } catch (err) {
-        console.error("Anonymous sign-in error:", err);
-        updateAuthUI("error", err.code || "error");
-        if (err.code === "auth/operation-not-allowed") {
-          showToast("Sila aktifkan Anonymous Auth di Firebase Console.", "error");
-        } else {
-          showToast("Ralat sambungan Firebase: " + (err.message || err.code), "error");
-        }
-      }
-    }
-
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        state.uid = user.uid;
-        updateAuthUI("connected", user.uid);
-      }
-    });
-
-    // =========================================================================
-    // 7. INITIALIZE STATIC & LOBBY UI CONTROLS
-    // =========================================================================
-    function initLobbyUI() {
-      // Sound toggle button
+    function bindAllEvents() {
+      // Sound toggle
       const updateSoundIcon = () => {
         $("soundIconOn").classList.toggle("hidden", sfx.muted);
         $("soundIconOff").classList.toggle("hidden", !sfx.muted);
@@ -1222,63 +1347,51 @@
       // Retry Auth
       $("retryAuthBtn").addEventListener("click", () => {
         sfx.playClick();
-        initAnonymousAuth();
+        initFirebaseNonBlocking();
       });
 
-      // Nickname persistence
+      // Nickname input
       const nickInput = $("nicknameInput");
       nickInput.value = state.nickname;
       nickInput.addEventListener("input", () => {
-        const val = nickInput.value.trim();
-        state.nickname = val || "Pemain";
+        state.nickname = nickInput.value.trim() || "Pemain";
         localStorage.setItem("duel_botol_nickname", state.nickname);
       });
 
-      // How to play toggle
+      // How to play collapsible
       $("howToPlayBtn").addEventListener("click", () => {
         sfx.playClick();
         $("howToPlayPanel").classList.toggle("hidden");
       });
-      $("closeHowToPlayBtn").addEventListener("click", () => {
-        sfx.playClick();
-        $("howToPlayPanel").classList.add("hidden");
-      });
 
       // Lobby Bottle Preview
-      const previewGrid = $("lobbyBottlePreview");
-      previewGrid.innerHTML = BOTTLES.map(b => `
-        <div class="flex flex-col items-center p-2 rounded-xl bg-slate-900/75 border border-slate-800">
-          <div class="w-9 h-9 sm:w-10 sm:h-10">${b.svg}</div>
-          <span class="text-[11px] font-bold ${b.text} mt-1">${b.name}</span>
+      $("lobbyBottlePreview").innerHTML = BOTTLES.map(b => `
+        <div class="flex flex-col items-center p-1.5 sm:p-2 rounded-xl bg-slate-900/80 border border-slate-800">
+          <div class="w-8 h-8 sm:w-9 sm:h-9">${b.svg}</div>
+          <span class="text-[10px] sm:text-[11px] font-bold ${b.text} mt-1">${b.name}</span>
         </div>
       `).join("");
 
-      // Host Setting Pill Selectors
-      setupPillGroup("slotCountSelector", (val) => {
-        state.hostSettings.slots = parseInt(val, 10);
-      });
-      setupPillGroup("duplicateModeSelector", (val) => {
-        state.hostSettings.allowDuplicates = (val === "true");
-      });
-      setupPillGroup("winRuleSelector", (val) => {
-        state.hostSettings.winRule = val;
-      });
-      setupPillGroup("timerSelector", (val) => {
-        state.hostSettings.turnTime = parseInt(val, 10);
-      });
+      // Pill Groups using Event Delegation
+      bindPillSelector("slotCountSelector", (val) => { state.settings.slots = parseInt(val, 10); });
+      bindPillSelector("timerSelector", (val) => { state.settings.turnTime = parseInt(val, 10); });
+      bindPillSelector("duplicateModeSelector", (val) => { state.settings.allowDuplicates = (val === "true"); });
+      bindPillSelector("winRuleSelector", (val) => { state.settings.winRule = val; });
+      bindPillSelector("botDifficultySelector", (val) => { state.botDifficulty = val; });
 
-      // Create Room Action
-      $("createRoomBtn").addEventListener("click", handleCreateRoom);
+      // Start Solo vs Bot
+      $("startBotGameBtn").addEventListener("click", startBotMatch);
 
-      // Join Room Action
+      // Online Create & Join Room
+      $("createRoomBtn").addEventListener("click", handleCreateOnlineRoom);
       const joinInput = $("joinCodeInput");
       joinInput.addEventListener("input", () => {
         joinInput.value = joinInput.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
       });
       joinInput.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") handleJoinRoom();
+        if (e.key === "Enter") handleJoinOnlineRoom();
       });
-      $("joinRoomBtn").addEventListener("click", handleJoinRoom);
+      $("joinRoomBtn").addEventListener("click", handleJoinOnlineRoom);
 
       // Copy Room Code
       $("copyRoomCodeBtn").addEventListener("click", () => {
@@ -1287,14 +1400,37 @@
       });
 
       // Leave Room Buttons
-      ["leaveWaitingBtn", "leaveSetupBtn", "leavePlayingBtn", "finishLeaveBtn"].forEach(btnId => {
-        $(btnId).addEventListener("click", () => {
+      ["leaveWaitingBtn", "leaveSetupBtn", "leavePlayingBtn", "finishLeaveBtn"].forEach(id => {
+        $(id).addEventListener("click", () => {
           sfx.playClick();
-          leaveCurrentRoom();
+          leaveMatchToLobby();
         });
       });
 
-      // Setup Phase Buttons
+      // Setup Phase: Event Delegation on Slots & Bottle Palette
+      $("setupSlotsContainer").addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-slot-idx]");
+        if (!btn || btn.disabled) return;
+        const idx = parseInt(btn.getAttribute("data-slot-idx"), 10);
+        if (state.setupSlots[idx] !== null) {
+          state.setupSlots[idx] = null;
+          state.setupActiveIdx = idx;
+          sfx.playRemove();
+        } else {
+          state.setupActiveIdx = idx;
+          sfx.playClick();
+        }
+        renderSetupSlots();
+      });
+
+      $("setupBottlePalette").addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-bottle-id]");
+        if (!btn || btn.disabled || !state.roomData) return;
+        const bottleId = btn.getAttribute("data-bottle-id");
+        placeBottleInArray(state.setupSlots, "setupActiveIdx", bottleId, state.roomData.settings.allowDuplicates);
+        renderSetupSlots();
+      });
+
       $("setupRandomBtn").addEventListener("click", () => {
         if (!state.roomData) return;
         const { slots, allowDuplicates } = state.roomData.settings;
@@ -1306,8 +1442,7 @@
 
       $("setupClearBtn").addEventListener("click", () => {
         if (!state.roomData) return;
-        const { slots } = state.roomData.settings;
-        state.setupSlots = Array(slots).fill(null);
+        state.setupSlots = Array(state.roomData.settings.slots).fill(null);
         state.setupActiveIdx = 0;
         sfx.playRemove();
         renderSetupSlots();
@@ -1315,8 +1450,38 @@
 
       $("lockSecretBtn").addEventListener("click", handleLockSecret);
 
-      // Playing Phase Buttons
-      $("copyPrevGuessBtn").addEventListener("click", handleCopyPreviousGuess);
+      // Playing Phase: Event Delegation on Guess Slots & Bottle Palette
+      $("guessSlotsContainer").addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-gslot-idx]");
+        if (!btn || btn.disabled) return;
+        const idx = parseInt(btn.getAttribute("data-gslot-idx"), 10);
+        if (state.guessSlots[idx] !== null) {
+          state.guessSlots[idx] = null;
+          state.guessActiveIdx = idx;
+          sfx.playRemove();
+        } else {
+          state.guessActiveIdx = idx;
+          sfx.playClick();
+        }
+        renderGuessSlots();
+      });
+
+      $("guessBottlePalette").addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-gbottle-id]");
+        if (!btn || btn.disabled || !state.roomData) return;
+        const bottleId = btn.getAttribute("data-gbottle-id");
+        placeBottleInArray(state.guessSlots, "guessActiveIdx", bottleId, state.roomData.settings.allowDuplicates);
+        renderGuessSlots();
+      });
+
+      $("guessClearBtn").addEventListener("click", () => {
+        if (!state.roomData) return;
+        state.guessSlots = Array(state.roomData.settings.slots).fill(null);
+        state.guessActiveIdx = 0;
+        sfx.playRemove();
+        renderGuessSlots();
+      });
+
       $("guessRandomBtn").addEventListener("click", () => {
         if (!state.roomData) return;
         const { slots, allowDuplicates } = state.roomData.settings;
@@ -1325,88 +1490,220 @@
         sfx.playPlace();
         renderGuessSlots();
       });
-      $("guessClearBtn").addEventListener("click", () => {
-        if (!state.roomData) return;
-        const { slots } = state.roomData.settings;
-        state.guessSlots = Array(slots).fill(null);
-        state.guessActiveIdx = 0;
-        sfx.playRemove();
-        renderGuessSlots();
-      });
+
       $("submitGuessBtn").addEventListener("click", () => handleSubmitGuess(false));
 
-      // Reaction Buttons
-      document.querySelectorAll(".reaction-trigger").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const emoji = btn.getAttribute("data-emoji");
-          handleSendReaction(emoji);
-        });
+      // Reaction Buttons via Event Delegation
+      $("reactionButtonsBar").addEventListener("click", (e) => {
+        const btn = e.target.closest("[data-emoji]");
+        if (!btn) return;
+        handleSendReaction(btn.getAttribute("data-emoji"));
       });
 
-      // History Tabs
+      // "Tekaan Lepas" Slide-Over Drawer Events
+      $("openLastGuessDrawerBtn").addEventListener("click", openLastGuessDrawer);
+      $("closeLastGuessDrawerBtn").addEventListener("click", () => {
+        sfx.playClick();
+        closeLastGuessDrawer();
+      });
+      $("lastGuessDrawerBackdrop").addEventListener("click", () => {
+        sfx.playClick();
+        closeLastGuessDrawer();
+      });
+
+      $("drawerCopyLastBtn").addEventListener("click", () => {
+        if (!state.roomData) return;
+        const myGuesses = getSortedGuesses(state.roomData.guesses?.[state.role]);
+        if (myGuesses.length === 0) return;
+        if (state.roomData.game?.turn !== state.role) {
+          showToast("Tunggu giliran anda untuk menyalin susunan!", "warn");
+          return;
+        }
+        state.guessSlots = [...myGuesses[0].guess];
+        state.guessActiveIdx = state.guessSlots.length - 1;
+        sfx.playPlace();
+        renderGuessSlots();
+        closeLastGuessDrawer();
+        showToast("Tekaan terakhir disalin ke slot semasa!", "success");
+      });
+
+      $("togglePeekSecretBtn").addEventListener("click", () => {
+        sfx.playClick();
+        const box = $("drawerMySecretReveal");
+        const isHidden = box.classList.contains("hidden");
+        if (isHidden && state.roomData) {
+          const secret = state.roomData.players?.[state.role]?.secret || [];
+          box.innerHTML = renderMiniBottleChips(secret);
+          box.classList.remove("hidden");
+          $("togglePeekSecretBtn").textContent = "🙈 Sembunyi";
+        } else {
+          box.classList.add("hidden");
+          $("togglePeekSecretBtn").textContent = "👁️ Intip Kod";
+        }
+      });
+
       $("tabMyGuesses").addEventListener("click", () => {
         sfx.playClick();
         state.activeHistoryTab = "mine";
-        renderGuessHistory();
+        renderGuessHistoryList();
       });
+
       $("tabOppGuesses").addEventListener("click", () => {
         sfx.playClick();
         state.activeHistoryTab = "opp";
-        renderGuessHistory();
+        renderGuessHistoryList();
       });
 
       // Rematch Button
       $("rematchBtn").addEventListener("click", handleRematch);
     }
 
-    function setupPillGroup(containerId, onChange) {
+    function bindPillSelector(containerId, onSelect) {
       const container = $(containerId);
-      const buttons = container.querySelectorAll(".setting-pill");
-      buttons.forEach(btn => {
-        btn.addEventListener("click", () => {
-          sfx.playClick();
-          buttons.forEach(b => {
-            b.classList.remove("active", "border-sky-400", "bg-sky-500/20", "text-white");
-            b.classList.add("border-slate-700", "bg-slate-900/70", "text-slate-300");
-          });
-          btn.classList.add("active", "border-sky-400", "bg-sky-500/20", "text-white");
-          btn.classList.remove("border-slate-700", "bg-slate-900/70", "text-slate-300");
-          onChange(btn.getAttribute("data-val"));
+      if (!container) return;
+      container.addEventListener("click", (e) => {
+        const btn = e.target.closest(".setting-pill");
+        if (!btn) return;
+        sfx.playClick();
+        container.querySelectorAll(".setting-pill").forEach(b => {
+          b.classList.remove("active", "border-sky-400", "bg-sky-500/20", "text-white");
+          b.classList.add("border-slate-700", "bg-slate-900/75", "text-slate-300");
         });
+        btn.classList.add("active", "border-sky-400", "bg-sky-500/20", "text-white");
+        btn.classList.remove("border-slate-700", "bg-slate-900/75", "text-slate-300");
+        onSelect(btn.getAttribute("data-val"));
       });
     }
 
     // =========================================================================
-    // 8. ROOM CREATION, JOINING & REALTIME LISTENER
+    // 8. SOLO VS BOT MATCH FLOW (100% LOCAL & INSTANT)
     // =========================================================================
-    async function handleCreateRoom() {
-      sfx.playClick();
-      if (!state.uid) {
-        showToast("Sila tunggu sambungan Firebase selesai.", "warn");
-        return;
+    function getBotDisplayName() {
+      const labels = {
+        casual: "Bot Santai",
+        tactical: "Bot Taktikal",
+        mastermind: "Bot Mastermind"
+      };
+      return labels[state.botDifficulty] || "Bot AI";
+    }
+
+    function startBotMatch() {
+      sfx.playSubmit();
+      cleanupAllTimersAndListeners();
+
+      state.gameMode = "bot";
+      state.role = "host";
+      state.roomCode = "BOT";
+      state.lastSeenFeedbackId = null;
+
+      const { slots, allowDuplicates } = state.settings;
+      const botSecret = generateRandomLineup(slots, allowDuplicates);
+
+      const localData = {
+        code: "BOT",
+        status: "setup",
+        settings: { ...state.settings },
+        players: {
+          host: {
+            name: state.nickname || "Pemain",
+            ready: false,
+            secret: []
+          },
+          challenger: {
+            name: getBotDisplayName(),
+            ready: true,
+            secret: botSecret
+          }
+        },
+        guesses: {
+          host: {},
+          challenger: {}
+        },
+        game: {
+          turn: "host",
+          round: 1,
+          turnStartedAt: null,
+          equalizerTriggeredBy: null,
+          winner: null,
+          lastFeedback: null
+        }
+      };
+
+      state.setupSlots = Array(slots).fill(null);
+      state.setupActiveIdx = 0;
+      handleStateSync(localData);
+    }
+
+    function scheduleBotTurn() {
+      if (state.botThinkTimeout) clearTimeout(state.botThinkTimeout);
+      state.botThinkTimeout = setTimeout(() => {
+        if (state.gameMode !== "bot" || !state.roomData || state.roomData.status !== "playing") return;
+        if (state.roomData.game?.turn !== "challenger") return;
+
+        const data = state.roomData;
+        const { slots, allowDuplicates } = data.settings;
+        const botPastGuesses = getSortedGuesses(data.guesses?.challenger);
+        const botGuess = computeBotNextGuess(slots, allowDuplicates, state.botDifficulty, botPastGuesses);
+
+        // Occasional playful bot emoji reaction
+        if (Math.random() < 0.35) {
+          const emojis = ["🤔", "🔥", "⚡", "👀"];
+          showFloatingReaction(emojis[Math.floor(Math.random() * emojis.length)], data.players.challenger.name);
+        }
+
+        applyGuessToState("challenger", botGuess);
+      }, 950);
+    }
+
+    // =========================================================================
+    // 9. ONLINE MULTIPLAYER ROOM CREATION & JOINING
+    // =========================================================================
+    function generateRoomCode() {
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let code = "";
+      for (let i = 0; i < 4; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
       }
+      return code;
+    }
+
+    async function ensureFirebaseReady() {
+      if (state.uid && db) return true;
+      showToast("Menyambung ke pelayan Firebase...", "info");
+      await initFirebaseNonBlocking();
+      if (!state.uid || !db) {
+        showToast("Gagal menyambung Firebase. Pastikan Anonymous Auth aktif.", "error");
+        return false;
+      }
+      return true;
+    }
+
+    async function handleCreateOnlineRoom() {
+      sfx.playClick();
+      const ready = await ensureFirebaseReady();
+      if (!ready) return;
 
       const btn = $("createRoomBtn");
       btn.disabled = true;
 
       try {
+        cleanupAllTimersAndListeners();
         let code = generateRoomCode();
         let roomRef = ref(db, `${ROOT_PATH}/${code}`);
         let snap = await get(roomRef);
-        // Ensure unique room code
         let attempts = 0;
-        while (snap.exists() && attempts < 5) {
+        while (snap.exists() && attempts < 6) {
           code = generateRoomCode();
           roomRef = ref(db, `${ROOT_PATH}/${code}`);
           snap = await get(roomRef);
           attempts++;
         }
 
-        const initialRoomData = {
+        const initialRoom = {
           code,
           createdAt: serverTimestamp(),
           status: "waiting",
-          settings: { ...state.hostSettings },
+          settings: { ...state.settings },
           players: {
             host: {
               uid: state.uid,
@@ -1425,36 +1722,35 @@
           }
         };
 
-        await set(roomRef, initialRoomData);
-        subscribeToRoom(code, "host");
+        await set(roomRef, initialRoom);
+        subscribeToOnlineRoom(code, "host");
         showToast(`Bilik ${code} berjaya dicipta!`, "success");
       } catch (err) {
         console.error("Create room error:", err);
-        showToast("Gagal mencipta bilik. Semak peraturan Realtime Database.", "error");
+        showToast("Gagal mencipta bilik. Semak Realtime Database Rules.", "error");
       } finally {
         btn.disabled = false;
       }
     }
 
-    async function handleJoinRoom() {
+    async function handleJoinOnlineRoom() {
       sfx.playClick();
-      if (!state.uid) {
-        showToast("Sila tunggu sambungan Firebase selesai.", "warn");
+      const code = $("joinCodeInput").value.trim().toUpperCase();
+      if (code.length < 4) {
+        showToast("Sila masukkan Kod Bilik yang sah.", "warn");
+        $("joinCodeInput").classList.add("animate-shake");
+        setTimeout(() => $("joinCodeInput").classList.remove("animate-shake"), 380);
         return;
       }
 
-      const code = $("joinCodeInput").value.trim().toUpperCase();
-      if (code.length !== 5) {
-        showToast("Sila masukkan 5 aksara Kod Bilik yang sah.", "warn");
-        $("joinCodeInput").classList.add("animate-shake");
-        setTimeout(() => $("joinCodeInput").classList.remove("animate-shake"), 400);
-        return;
-      }
+      const ready = await ensureFirebaseReady();
+      if (!ready) return;
 
       const btn = $("joinRoomBtn");
       btn.disabled = true;
 
       try {
+        cleanupAllTimersAndListeners();
         const roomRef = ref(db, `${ROOT_PATH}/${code}`);
         const snap = await get(roomRef);
 
@@ -1464,25 +1760,19 @@
         }
 
         const data = snap.val();
-
-        // Allow rejoining if user was already host or challenger
         if (data.players?.host?.uid === state.uid) {
-          subscribeToRoom(code, "host");
-          showToast("Menyambung semula sebagai Host...", "info");
+          subscribeToOnlineRoom(code, "host");
           return;
         }
         if (data.players?.challenger?.uid === state.uid) {
-          subscribeToRoom(code, "challenger");
-          showToast("Menyambung semula sebagai Pencabar...", "info");
+          subscribeToOnlineRoom(code, "challenger");
           return;
         }
-
         if (data.players?.challenger) {
           showToast("Bilik ini sudah penuh!", "error");
           return;
         }
 
-        // Join as challenger and transition status to 'setup'
         await update(roomRef, {
           status: "setup",
           "players/challenger": {
@@ -1493,7 +1783,7 @@
           }
         });
 
-        subscribeToRoom(code, "challenger");
+        subscribeToOnlineRoom(code, "challenger");
         showToast(`Berjaya menyertai bilik ${code}!`, "success");
       } catch (err) {
         console.error("Join room error:", err);
@@ -1503,8 +1793,8 @@
       }
     }
 
-    function subscribeToRoom(code, role) {
-      cleanupRoomListener();
+    function subscribeToOnlineRoom(code, role) {
+      state.gameMode = "online";
       state.roomCode = code;
       state.role = role;
       state.lastSeenFeedbackId = null;
@@ -1517,18 +1807,14 @@
       state.roomListener = onValue(roomRef, (snapshot) => {
         if (!snapshot.exists()) {
           showToast("Bilik telah ditutup.", "warn");
-          leaveCurrentRoom();
+          leaveMatchToLobby();
           return;
         }
-        const data = snapshot.val();
-        handleRoomStateUpdate(data);
-      }, (error) => {
-        console.error("RTDB listener error:", error);
-        showToast("Terputus hubungan dengan pelayan.", "error");
+        handleStateSync(snapshot.val());
       });
     }
 
-    function cleanupRoomListener() {
+    function cleanupAllTimersAndListeners() {
       if (state.roomRef && state.roomListener) {
         off(state.roomRef, "value", state.roomListener);
       }
@@ -1536,14 +1822,17 @@
         clearInterval(state.timerInterval);
         state.timerInterval = null;
       }
+      if (state.botThinkTimeout) {
+        clearTimeout(state.botThinkTimeout);
+        state.botThinkTimeout = null;
+      }
       state.roomRef = null;
       state.roomListener = null;
     }
 
-    function leaveCurrentRoom() {
-      cleanupRoomListener();
+    function leaveMatchToLobby() {
+      cleanupAllTimersAndListeners();
       state.roomCode = null;
-      state.role = null;
       state.roomData = null;
       state.setupSlots = [];
       state.guessSlots = [];
@@ -1551,13 +1840,13 @@
     }
 
     // =========================================================================
-    // 9. REALTIME ROOM STATE SYNCHRONIZATION & VIEW ROUTING
+    // 10. UNIFIED STATE SYNCHRONIZATION (WORKS FOR BOT & ONLINE)
     // =========================================================================
-    function handleRoomStateUpdate(data) {
+    function handleStateSync(data) {
       const prevStatus = state.roomData?.status;
       state.roomData = data;
 
-      // Handle incoming live reactions from either player
+      // Live Reactions in Online Mode
       if (data.reaction && data.reaction.id && data.reaction.id !== state.lastSeenReactionId) {
         if (state.lastSeenReactionId !== null) {
           showFloatingReaction(data.reaction.emoji, data.reaction.fromName);
@@ -1568,14 +1857,13 @@
       if (data.status === "waiting") {
         renderWaitingView(data);
         switchView("viewWaiting");
-      } 
+      }
       else if (data.status === "setup") {
-        // Initialize local setup slots if entering setup or slot length changed (e.g., after rematch)
         const slotCount = data.settings.slots;
-        const myPlayer = data.players?.[state.role];
+        const me = data.players?.[state.role];
         if (prevStatus !== "setup" || state.setupSlots.length !== slotCount) {
-          if (myPlayer?.ready && Array.isArray(myPlayer.secret) && myPlayer.secret.length === slotCount) {
-            state.setupSlots = [...myPlayer.secret];
+          if (me?.ready && Array.isArray(me.secret) && me.secret.length === slotCount) {
+            state.setupSlots = [...me.secret];
           } else {
             state.setupSlots = Array(slotCount).fill(null);
             state.setupActiveIdx = 0;
@@ -1584,29 +1872,33 @@
         renderSetupView(data);
         switchView("viewSetup");
 
-        // Host checks if both players are ready -> start match!
+        // Transition to playing when both ready
         if (
           state.role === "host" &&
           data.players?.host?.ready === true &&
           data.players?.challenger?.ready === true &&
           !state.isTransitioningGame
         ) {
-          state.isTransitioningGame = true;
-          update(state.roomRef, {
-            status: "playing",
-            game: {
-              turn: "host",
-              round: 1,
-              turnStartedAt: Date.now(),
-              equalizerTriggeredBy: null,
-              winner: null,
-              lastFeedback: null
-            }
-          }).finally(() => {
-            state.isTransitioningGame = false;
-          });
+          const nextGameState = {
+            turn: "host",
+            round: 1,
+            turnStartedAt: Date.now(),
+            equalizerTriggeredBy: null,
+            winner: null,
+            lastFeedback: null
+          };
+
+          if (state.gameMode === "bot") {
+            const updated = { ...data, status: "playing", game: nextGameState };
+            handleStateSync(updated);
+          } else if (state.roomRef) {
+            state.isTransitioningGame = true;
+            update(state.roomRef, { status: "playing", game: nextGameState }).finally(() => {
+              state.isTransitioningGame = false;
+            });
+          }
         }
-      } 
+      }
       else if (data.status === "playing") {
         const slotCount = data.settings.slots;
         if (prevStatus !== "playing" || state.guessSlots.length !== slotCount) {
@@ -1615,7 +1907,11 @@
         }
         renderPlayingView(data);
         switchView("viewPlaying");
-      } 
+
+        if (state.gameMode === "bot" && data.game?.turn === "challenger") {
+          scheduleBotTurn();
+        }
+      }
       else if (data.status === "finished") {
         if (state.timerInterval) {
           clearInterval(state.timerInterval);
@@ -1627,22 +1923,45 @@
     }
 
     // =========================================================================
-    // 10. VIEW RENDERERS: WAITING & SETUP
+    // 11. SETUP & SLOT INTERACTION LOGIC
     // =========================================================================
+    function placeBottleInArray(slotsArr, activeIdxKey, bottleId, allowDuplicates) {
+      if (!allowDuplicates && slotsArr.includes(bottleId)) {
+        sfx.playRemove();
+        showToast("Mod Unik: Botol ini sudah digunakan!", "warn");
+        return;
+      }
+
+      let targetIdx = state[activeIdxKey];
+      if (targetIdx < 0 || targetIdx >= slotsArr.length || slotsArr[targetIdx] !== null) {
+        const firstEmpty = slotsArr.findIndex(s => s === null);
+        if (firstEmpty !== -1) targetIdx = firstEmpty;
+      }
+
+      slotsArr[targetIdx] = bottleId;
+      sfx.playPlace();
+
+      const nextEmpty = slotsArr.findIndex((s, i) => s === null && i > targetIdx);
+      if (nextEmpty !== -1) {
+        state[activeIdxKey] = nextEmpty;
+      } else {
+        const anyEmpty = slotsArr.findIndex(s => s === null);
+        state[activeIdxKey] = anyEmpty !== -1 ? anyEmpty : Math.min(targetIdx + 1, slotsArr.length - 1);
+      }
+    }
+
     function renderWaitingView(data) {
       $("waitingRoomCode").textContent = data.code;
-      $("waitingHostName").textContent = data.players?.host?.name || "Host";
-
       const { slots, allowDuplicates, winRule, turnTime } = data.settings;
       const pills = [
         `${slots} Slot`,
-        allowDuplicates ? "Mod Hardcore (Berulang)" : "Mod Unik",
+        allowDuplicates ? "Hardcore" : "Unik",
         winRule === "equalizer" ? "Equalizer" : "Instant Win",
-        turnTime > 0 ? `${turnTime} Saat/Giliran` : "Tiada Had Masa"
+        turnTime > 0 ? `${turnTime}s` : "Tiada Had"
       ];
-      $("waitingSettingsPills").innerHTML = pills.map(p => `
-        <span class="px-3 py-1 rounded-full bg-slate-900/90 border border-slate-700 text-slate-300">${p}</span>
-      `).join("");
+      $("waitingSettingsPills").innerHTML = pills.map(p =>
+        `<span class="px-2.5 py-1 rounded-full bg-slate-900 border border-slate-700 text-slate-300">${p}</span>`
+      ).join("");
     }
 
     function renderSetupView(data) {
@@ -1652,33 +1971,25 @@
       const opp = data.players?.[oppRole] || {};
       const { slots, allowDuplicates, winRule, turnTime } = data.settings;
 
-      $("setupRoomCode").textContent = data.code;
+      $("setupModeBadge").textContent = state.gameMode === "bot" ? "SOLO VS BOT" : `BILIK: ${data.code}`;
       $("setupSettingsSummary").textContent = `${slots} Slot • ${allowDuplicates ? "Hardcore" : "Unik"} • ${winRule === "equalizer" ? "Equalizer" : "Instant"} • ${turnTime > 0 ? turnTime + "s" : "Tiada Had"}`;
 
       $("setupMyName").textContent = me.name || "Anda";
-      $("setupOppName").textContent = opp.name || "Pencabar";
+      $("setupOppName").textContent = opp.name || "Lawan";
 
-      const myBadge = $("setupMyReadyBadge");
-      if (me.ready) {
-        myBadge.className = "px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-bold";
-        myBadge.textContent = "Sudah Kunci ✓";
-      } else {
-        myBadge.className = "px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-bold";
-        myBadge.textContent = "Menyusun...";
-      }
+      $("setupMyReadyBadge").textContent = me.ready ? "Sedia ✓" : "Menyusun";
+      $("setupMyReadyBadge").className = me.ready
+        ? "shrink-0 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold"
+        : "shrink-0 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold";
 
-      const oppBadge = $("setupOppReadyBadge");
-      if (opp.ready) {
-        oppBadge.className = "px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-bold";
-        oppBadge.textContent = "Sudah Kunci ✓";
-      } else {
-        oppBadge.className = "px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[11px] font-bold";
-        oppBadge.textContent = "Menyusun...";
-      }
+      $("setupOppReadyBadge").textContent = opp.ready ? "Sedia ✓" : "Menyusun";
+      $("setupOppReadyBadge").className = opp.ready
+        ? "shrink-0 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold"
+        : "shrink-0 px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold";
 
       $("setupRuleHint").textContent = allowDuplicates
-        ? `Mod Hardcore: Anda BOLEH meletakkan botol yang sama dalam ${slots} slot.`
-        : `Mod Unik: Setiap slot mestilah botol yang BERBEZA (${slots} botol unik).`;
+        ? `Mod Hardcore: Boleh ulang botol yang sama (${slots} slot).`
+        : `Mod Unik: Pilih ${slots} botol yang berbeza.`;
 
       const isLocked = Boolean(me.ready);
       $("setupInteractiveControls").classList.toggle("hidden", isLocked);
@@ -1693,207 +2004,136 @@
       const isLocked = Boolean(data.players?.[state.role]?.ready);
       const { allowDuplicates } = data.settings;
 
-      // Render Slots
-      const slotsContainer = $("setupSlotsContainer");
-      slotsContainer.innerHTML = state.setupSlots.map((bottleId, idx) => {
-        const bottle = bottleId ? BOTTLE_MAP[bottleId] : null;
+      $("setupSlotsContainer").innerHTML = state.setupSlots.map((bottleId, idx) => {
+        const b = bottleId ? BOTTLE_MAP[bottleId] : null;
         const isActive = !isLocked && idx === state.setupActiveIdx;
         return `
           <button type="button" data-slot-idx="${idx}" ${isLocked ? "disabled" : ""}
-            class="setup-slot-btn slot-box relative w-16 h-24 sm:w-20 sm:h-28 rounded-2xl border-2 ${bottle ? `${bottle.border} ${bottle.bgSoft}` : "border-dashed border-slate-700 bg-slate-900/70"} ${isActive ? "slot-active" : ""} flex flex-col items-center justify-center p-1.5 select-none">
-            <span class="absolute top-1.5 left-2 text-[10px] font-display font-bold text-slate-400">#${idx + 1}</span>
-            ${bottle ? `
-              <div class="w-11 h-11 sm:w-13 sm:h-13 animate-pop-in">${bottle.svg}</div>
-              <span class="text-[11px] font-bold ${bottle.text} mt-1 leading-none">${bottle.name}</span>
-            ` : `
-              <span class="text-slate-600 text-lg font-bold">+</span>
-            `}
+            class="slot-box relative w-14 h-20 sm:w-20 sm:h-28 rounded-2xl border-2 ${b ? `${b.border} ${b.bgSoft}` : "border-dashed border-slate-700 bg-slate-900/75"} ${isActive ? "slot-active" : ""} flex flex-col items-center justify-center p-1">
+            <span class="absolute top-1 left-1.5 text-[9px] font-display font-bold text-slate-400">#${idx + 1}</span>
+            ${b ? `
+              <div class="w-9 h-9 sm:w-13 sm:h-13 animate-pop-in">${b.svg}</div>
+              <span class="text-[10px] sm:text-[11px] font-bold ${b.text} mt-0.5 leading-none">${b.name}</span>
+            ` : `<span class="text-slate-600 text-base font-bold">+</span>`}
           </button>
         `;
       }).join("");
 
       if (!isLocked) {
-        slotsContainer.querySelectorAll(".setup-slot-btn").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const idx = parseInt(btn.getAttribute("data-slot-idx"), 10);
-            if (state.setupSlots[idx] !== null) {
-              state.setupSlots[idx] = null;
-              state.setupActiveIdx = idx;
-              sfx.playRemove();
-            } else {
-              state.setupActiveIdx = idx;
-              sfx.playClick();
-            }
-            renderSetupSlots();
-          });
-        });
-
-        // Render Palette
-        const palette = $("setupBottlePalette");
-        palette.innerHTML = BOTTLES.map(b => {
-          const alreadyUsed = !allowDuplicates && state.setupSlots.includes(b.id);
+        $("setupBottlePalette").innerHTML = BOTTLES.map(b => {
+          const used = !allowDuplicates && state.setupSlots.includes(b.id);
           return `
-            <button type="button" data-bottle-id="${b.id}" ${alreadyUsed ? "disabled" : ""}
-              class="setup-palette-btn bottle-btn flex flex-col items-center p-2 rounded-xl border ${alreadyUsed ? "border-slate-800 bg-slate-900/40 opacity-35 cursor-not-allowed" : `${b.border} bg-slate-900/90 hover:bg-slate-800`}">
-              <div class="w-9 h-9 sm:w-11 sm:h-11">${b.svg}</div>
-              <span class="text-[11px] font-bold ${b.text} mt-1">${b.name}</span>
+            <button type="button" data-bottle-id="${b.id}" ${used ? "disabled" : ""}
+              class="bottle-btn flex flex-col items-center p-1.5 sm:p-2 rounded-xl border ${used ? "border-slate-800 bg-slate-900/40 opacity-30" : `${b.border} bg-slate-900/90 hover:bg-slate-800`}">
+              <div class="w-8 h-8 sm:w-10 sm:h-10">${b.svg}</div>
+              <span class="text-[10px] sm:text-[11px] font-bold ${b.text} mt-0.5 leading-none">${b.name}</span>
             </button>
           `;
         }).join("");
-
-        palette.querySelectorAll(".setup-palette-btn").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const bottleId = btn.getAttribute("data-bottle-id");
-            placeBottleInArray(state.setupSlots, "setupActiveIdx", bottleId, allowDuplicates);
-            renderSetupSlots();
-          });
-        });
       }
 
-      // Enable Lock button only if all slots filled
-      const allFilled = state.setupSlots.every(s => s !== null);
-      $("lockSecretBtn").disabled = !allFilled;
-    }
-
-    function placeBottleInArray(slotsArr, activeIdxKey, bottleId, allowDuplicates) {
-      if (!allowDuplicates && slotsArr.includes(bottleId)) {
-        sfx.playRemove();
-        showToast("Mod Unik: Botol ini sudah dipilih!", "warn");
-        return;
-      }
-
-      let targetIdx = state[activeIdxKey];
-      if (targetIdx < 0 || targetIdx >= slotsArr.length || slotsArr[targetIdx] !== null) {
-        const firstEmpty = slotsArr.findIndex(s => s === null);
-        if (firstEmpty !== -1) {
-          targetIdx = firstEmpty;
-        }
-      }
-
-      slotsArr[targetIdx] = bottleId;
-      sfx.playPlace();
-
-      // Advance pointer to next empty slot if available
-      const nextEmpty = slotsArr.findIndex((s, i) => s === null && i > targetIdx);
-      if (nextEmpty !== -1) {
-        state[activeIdxKey] = nextEmpty;
-      } else {
-        const anyEmpty = slotsArr.findIndex(s => s === null);
-        state[activeIdxKey] = anyEmpty !== -1 ? anyEmpty : Math.min(targetIdx + 1, slotsArr.length - 1);
-      }
+      $("lockSecretBtn").disabled = state.setupSlots.some(s => s === null);
     }
 
     async function handleLockSecret() {
-      if (!state.roomData || !state.roomRef) return;
-      if (state.setupSlots.some(s => s === null)) return;
-
+      if (!state.roomData || state.setupSlots.some(s => s === null)) return;
       sfx.playSubmit();
-      const btn = $("lockSecretBtn");
-      btn.disabled = true;
+      $("lockSecretBtn").disabled = true;
 
-      try {
-        await update(state.roomRef, {
-          [`players/${state.role}/secret`]: [...state.setupSlots],
-          [`players/${state.role}/ready`]: true
-        });
-      } catch (err) {
-        console.error("Lock secret error:", err);
-        showToast("Gagal mengunci susunan. Cuba lagi.", "error");
-        btn.disabled = false;
+      if (state.gameMode === "bot") {
+        const updated = JSON.parse(JSON.stringify(state.roomData));
+        updated.players.host.secret = [...state.setupSlots];
+        updated.players.host.ready = true;
+        handleStateSync(updated);
+      } else if (state.roomRef) {
+        try {
+          await update(state.roomRef, {
+            [`players/${state.role}/secret`]: [...state.setupSlots],
+            [`players/${state.role}/ready`]: true
+          });
+        } catch (err) {
+          showToast("Gagal mengunci susunan. Cuba lagi.", "error");
+          $("lockSecretBtn").disabled = false;
+        }
       }
     }
 
     // =========================================================================
-    // 11. VIEW RENDERERS: PLAYING ARENA, TIMER & GUESS LOGIC
+    // 12. ZERO-SCROLL GAMEPLAY ARENA & GUESS SUBMISSION
     // =========================================================================
     function renderPlayingView(data) {
       const myRole = state.role;
       const oppRole = myRole === "host" ? "challenger" : "host";
       const oppName = data.players?.[oppRole]?.name || "Lawan";
       const game = data.game || {};
-      const { slots, allowDuplicates, winRule, turnTime } = data.settings;
+      const { slots, allowDuplicates, turnTime } = data.settings;
       const isMyTurn = game.turn === myRole;
 
-      $("playRoomCode").textContent = data.code;
+      $("playModeTag").textContent = state.gameMode === "bot" ? `VS ${oppName.toUpperCase()}` : `BILIK ${data.code}`;
       $("playRoundNum").textContent = game.round || 1;
-      $("playModeBadge").textContent = `${slots} Slot • ${allowDuplicates ? "Hardcore" : "Unik"} • ${winRule === "equalizer" ? "Equalizer" : "Instant"}`;
 
-      // Equalizer Banner
+      // Update "Tekaan Lepas" top button badge
+      const myGuesses = getSortedGuesses(data.guesses?.[myRole]);
+      if (myGuesses.length > 0) {
+        const last = myGuesses[0];
+        $("lastGuessBtnLabel").textContent = `Tekaan Lepas: ${last.correct}/${slots} Betul`;
+      } else {
+        $("lastGuessBtnLabel").textContent = "Tekaan Lepas: Belum";
+      }
+
+      // Equalizer banner
       const eqBanner = $("equalizerBanner");
       if (game.equalizerTriggeredBy === "host") {
         eqBanner.classList.remove("hidden");
         $("equalizerBannerText").textContent = myRole === "challenger"
-          ? "Host telah meneka tepat! Teka semua botol dengan tepat sekarang untuk SERI!"
-          : `Menunggu giliran terakhir ${oppName} untuk menentukan kemenangan atau seri...`;
+          ? "Host meneka tepat! Teka tepat sekarang untuk SERI!"
+          : `Menunggu giliran terakhir ${oppName}...`;
       } else {
         eqBanner.classList.add("hidden");
       }
 
-      // Turn Banner Styling
+      // Turn Banner
       const turnCard = $("turnBannerCard");
       if (isMyTurn) {
-        turnCard.className = "glass-card rounded-2xl p-4 border-2 border-emerald-400/80 turn-active-glow transition-all";
-        $("turnStatusTitle").textContent = "GILIRAN ANDA MENYUSUN";
-        $("turnStatusTitle").className = "font-display font-bold text-lg sm:text-xl text-emerald-300";
-        $("turnStatusSub").textContent = `Susun ${slots} botol untuk meneka rahsia ${oppName}`;
+        turnCard.className = "shrink-0 glass-card rounded-2xl px-3.5 py-2.5 border-2 border-emerald-400/80 turn-active-glow transition-all";
+        $("turnStatusTitle").textContent = "GILIRAN ANDA MENEKA";
+        $("turnStatusTitle").className = "font-display font-bold text-sm sm:text-base text-emerald-300 truncate";
+        $("turnStatusSub").textContent = `Teka susunan rahsia ${oppName} (${slots} slot)`;
       } else {
-        turnCard.className = "glass-card rounded-2xl p-4 border border-slate-700/90 transition-all";
-        $("turnStatusTitle").textContent = `MENUNGGU GILIRAN ${oppName.toUpperCase()}...`;
-        $("turnStatusTitle").className = "font-display font-bold text-lg sm:text-xl text-amber-300";
-        $("turnStatusSub").textContent = "Sila tunggu pihak lawan menghantar tekaan mereka.";
+        turnCard.className = "shrink-0 glass-card rounded-2xl px-3.5 py-2.5 border border-slate-700/90 transition-all";
+        $("turnStatusTitle").textContent = `GILIRAN ${oppName.toUpperCase()}...`;
+        $("turnStatusTitle").className = "font-display font-bold text-sm sm:text-base text-amber-300 truncate";
+        $("turnStatusSub").textContent = "Pihak lawan sedang membuat tekaan...";
       }
 
-      // Blind Feedback Alert Banner
+      // Latest Feedback Pill
+      const fbPill = $("latestFeedbackPill");
       if (game.lastFeedback && game.lastFeedback.id) {
         const fb = game.lastFeedback;
-        const fbBanner = $("blindFeedbackBanner");
-        fbBanner.classList.remove("hidden");
+        fbPill.classList.remove("hidden");
+        $("latestFeedbackActor").textContent = fb.by === myRole ? "Tekaan Anda" : oppName;
+        $("latestFeedbackScore").textContent = `${fb.correct}/${fb.total} Betul`;
 
-        const isMine = fb.by === myRole;
-        const actorLabel = isMine ? `TEKAAN ANDA (Pusingan ${fb.round})` : `TEKAAN ${oppName.toUpperCase()} (Pusingan ${fb.round})`;
-        $("blindFeedbackActor").textContent = actorLabel;
-        $("blindFeedbackScore").textContent = `${fb.correct} / ${fb.total} SLOT TEPAT!`;
-
-        if (fb.correct === fb.total) {
-          fbBanner.className = "rounded-2xl p-4 border border-emerald-400/70 bg-emerald-950/75 text-emerald-200 text-center transition-all";
-        } else if (fb.correct > 0) {
-          fbBanner.className = "rounded-2xl p-4 border border-sky-400/60 bg-sky-950/70 text-sky-200 text-center transition-all";
-        } else {
-          fbBanner.className = "rounded-2xl p-4 border border-slate-600/70 bg-slate-900/85 text-slate-300 text-center transition-all";
-        }
-
-        // Play audio feedback once per new feedback event
         if (fb.id !== state.lastSeenFeedbackId) {
           if (state.lastSeenFeedbackId !== null || fb.round === 1) {
-            const myGuessesArr = getSortedGuesses(data.guesses?.[myRole]);
-            const prevBest = myGuessesArr.length > 1
-              ? Math.max(...myGuessesArr.slice(1).map(g => g.correct))
-              : 0;
+            const prevBest = myGuesses.length > 1 ? Math.max(...myGuesses.slice(1).map(g => g.correct)) : 0;
             sfx.playFeedback(fb.correct, prevBest, fb.total);
           }
           state.lastSeenFeedbackId = fb.id;
         }
       } else {
-        $("blindFeedbackBanner").classList.add("hidden");
+        fbPill.classList.add("hidden");
       }
 
-      // Duplicate hint pill
-      $("guessDuplicateHint").textContent = allowDuplicates ? "Mod Hardcore (Boleh Sama)" : "Mod Unik";
-
-      // Toggle Interactive Controls vs Waiting Note
+      $("guessDuplicateHint").textContent = allowDuplicates ? "Mod Hardcore" : "Mod Unik";
       $("guessControlsWrapper").classList.toggle("hidden", !isMyTurn);
       $("waitingOpponentTurnNote").classList.toggle("hidden", isMyTurn);
 
-      // Copy previous guess availability
-      const myGuessesList = getSortedGuesses(data.guesses?.[myRole]);
-      $("copyPrevGuessBtn").disabled = myGuessesList.length === 0;
+      $("guessClearBtn").disabled = !isMyTurn;
+      $("guessRandomBtn").disabled = !isMyTurn;
 
-      // Setup Synchronized Countdown Timer
       setupTurnTimer(turnTime, game.turnStartedAt, isMyTurn);
-
-      // Render Guess Slots & History
       renderGuessSlots();
-      renderGuessHistory();
     }
 
     function setupTurnTimer(turnTimeSeconds, turnStartedAt, isMyTurn) {
@@ -1902,46 +2142,41 @@
         state.timerInterval = null;
       }
 
-      const pillWrapper = $("timerPillWrapper");
-      const barContainer = $("timerBarContainer");
-
+      const pill = $("timerPillWrapper");
+      const barWrap = $("timerBarContainer");
       if (!turnTimeSeconds || turnTimeSeconds <= 0 || !turnStartedAt) {
-        pillWrapper.classList.add("hidden");
-        barContainer.classList.add("hidden");
+        pill.classList.add("hidden");
+        barWrap.classList.add("hidden");
         return;
       }
 
-      pillWrapper.classList.remove("hidden");
-      barContainer.classList.remove("hidden");
+      pill.classList.remove("hidden");
+      barWrap.classList.remove("hidden");
       state.lastTickSecond = null;
-
       const totalMs = turnTimeSeconds * 1000;
 
       const tick = () => {
-        const elapsed = Date.now() - turnStartedAt;
-        const remainingMs = Math.max(0, totalMs - elapsed);
+        const remainingMs = Math.max(0, totalMs - (Date.now() - turnStartedAt));
         const remainingSec = Math.ceil(remainingMs / 1000);
         const pct = Math.max(0, Math.min(100, (remainingMs / totalMs) * 100));
 
-        const secText = $("timerSecondsText");
-        const bar = $("timerProgressBar");
-
-        secText.textContent = `${remainingSec}s`;
-        bar.style.width = `${pct}%`;
+        const secEl = $("timerSecondsText");
+        const barEl = $("timerProgressBar");
+        secEl.textContent = `${remainingSec}s`;
+        barEl.style.width = `${pct}%`;
 
         if (remainingSec <= 5) {
-          secText.className = "font-display font-bold text-2xl sm:text-3xl text-rose-400 animate-pulse leading-none";
-          bar.className = "h-full bg-gradient-to-r from-rose-500 to-amber-500 transition-all duration-100";
+          secEl.className = "font-display font-bold text-lg sm:text-xl text-rose-400 animate-pulse leading-none";
+          barEl.className = "h-full bg-gradient-to-r from-rose-500 to-amber-500 transition-all duration-100";
           if (remainingSec > 0 && state.lastTickSecond !== remainingSec) {
             sfx.playTick();
             state.lastTickSecond = remainingSec;
           }
         } else {
-          secText.className = "font-display font-bold text-2xl sm:text-3xl text-sky-400 leading-none";
-          bar.className = "h-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-100";
+          secEl.className = "font-display font-bold text-lg sm:text-xl text-sky-400 leading-none";
+          barEl.className = "h-full bg-gradient-to-r from-sky-400 to-emerald-400 transition-all duration-100";
         }
 
-        // Auto-submit when active player's timer reaches 0
         if (remainingMs <= 0 && isMyTurn && !state.isSubmittingGuess) {
           clearInterval(state.timerInterval);
           state.timerInterval = null;
@@ -1960,93 +2195,52 @@
       const isMyTurn = data.game?.turn === state.role;
       const { allowDuplicates } = data.settings;
 
-      const slotsContainer = $("guessSlotsContainer");
-      slotsContainer.innerHTML = state.guessSlots.map((bottleId, idx) => {
-        const bottle = bottleId ? BOTTLE_MAP[bottleId] : null;
+      $("guessSlotsContainer").innerHTML = state.guessSlots.map((bottleId, idx) => {
+        const b = bottleId ? BOTTLE_MAP[bottleId] : null;
         const isActive = isMyTurn && idx === state.guessActiveIdx;
         return `
           <button type="button" data-gslot-idx="${idx}" ${!isMyTurn ? "disabled" : ""}
-            class="guess-slot-btn slot-box relative w-16 h-24 sm:w-20 sm:h-28 rounded-2xl border-2 ${bottle ? `${bottle.border} ${bottle.bgSoft}` : "border-dashed border-slate-700 bg-slate-900/70"} ${isActive ? "slot-active" : ""} ${!isMyTurn ? "opacity-75" : ""} flex flex-col items-center justify-center p-1.5 select-none">
-            <span class="absolute top-1.5 left-2 text-[10px] font-display font-bold text-slate-400">#${idx + 1}</span>
-            ${bottle ? `
-              <div class="w-11 h-11 sm:w-13 sm:h-13 animate-pop-in">${bottle.svg}</div>
-              <span class="text-[11px] font-bold ${bottle.text} mt-1 leading-none">${bottle.name}</span>
-            ` : `
-              <span class="text-slate-600 text-lg font-bold">?</span>
-            `}
+            class="slot-box relative w-14 h-20 sm:w-20 sm:h-28 rounded-2xl border-2 ${b ? `${b.border} ${b.bgSoft}` : "border-dashed border-slate-700 bg-slate-900/75"} ${isActive ? "slot-active" : ""} ${!isMyTurn ? "opacity-70" : ""} flex flex-col items-center justify-center p-1">
+            <span class="absolute top-1 left-1.5 text-[9px] font-display font-bold text-slate-400">#${idx + 1}</span>
+            ${b ? `
+              <div class="w-9 h-9 sm:w-13 sm:h-13 animate-pop-in">${b.svg}</div>
+              <span class="text-[10px] sm:text-[11px] font-bold ${b.text} mt-0.5 leading-none">${b.name}</span>
+            ` : `<span class="text-slate-600 text-base font-bold">?</span>`}
           </button>
         `;
       }).join("");
 
       if (isMyTurn) {
-        slotsContainer.querySelectorAll(".guess-slot-btn").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const idx = parseInt(btn.getAttribute("data-gslot-idx"), 10);
-            if (state.guessSlots[idx] !== null) {
-              state.guessSlots[idx] = null;
-              state.guessActiveIdx = idx;
-              sfx.playRemove();
-            } else {
-              state.guessActiveIdx = idx;
-              sfx.playClick();
-            }
-            renderGuessSlots();
-          });
-        });
-
-        const palette = $("guessBottlePalette");
-        palette.innerHTML = BOTTLES.map(b => {
-          const alreadyUsed = !allowDuplicates && state.guessSlots.includes(b.id);
+        $("guessBottlePalette").innerHTML = BOTTLES.map(b => {
+          const used = !allowDuplicates && state.guessSlots.includes(b.id);
           return `
-            <button type="button" data-gbottle-id="${b.id}" ${alreadyUsed ? "disabled" : ""}
-              class="guess-palette-btn bottle-btn flex flex-col items-center p-2 rounded-xl border ${alreadyUsed ? "border-slate-800 bg-slate-900/40 opacity-35 cursor-not-allowed" : `${b.border} bg-slate-900/90 hover:bg-slate-800`}">
-              <div class="w-9 h-9 sm:w-11 sm:h-11">${b.svg}</div>
-              <span class="text-[11px] font-bold ${b.text} mt-1">${b.name}</span>
+            <button type="button" data-gbottle-id="${b.id}" ${used ? "disabled" : ""}
+              class="bottle-btn flex flex-col items-center p-1.5 sm:p-2 rounded-xl border ${used ? "border-slate-800 bg-slate-900/40 opacity-30" : `${b.border} bg-slate-900/90 hover:bg-slate-800`}">
+              <div class="w-8 h-8 sm:w-10 sm:h-10">${b.svg}</div>
+              <span class="text-[10px] sm:text-[11px] font-bold ${b.text} mt-0.5 leading-none">${b.name}</span>
             </button>
           `;
         }).join("");
-
-        palette.querySelectorAll(".guess-palette-btn").forEach(btn => {
-          btn.addEventListener("click", () => {
-            const bottleId = btn.getAttribute("data-gbottle-id");
-            placeBottleInArray(state.guessSlots, "guessActiveIdx", bottleId, allowDuplicates);
-            renderGuessSlots();
-          });
-        });
       }
 
       const allFilled = state.guessSlots.every(s => s !== null);
       $("submitGuessBtn").disabled = !isMyTurn || !allFilled || state.isSubmittingGuess;
     }
 
-    function handleCopyPreviousGuess() {
-      if (!state.roomData) return;
-      const myGuesses = getSortedGuesses(state.roomData.guesses?.[state.role]);
-      if (myGuesses.length === 0) return;
-      state.guessSlots = [...myGuesses[0].guess];
-      state.guessActiveIdx = state.guessSlots.length - 1;
-      sfx.playPlace();
-      renderGuessSlots();
-      showToast("Tekaan lepas disalin!", "info");
-    }
-
     async function handleSubmitGuess(isAutoTimeout = false) {
-      if (!state.roomData || !state.roomRef || state.isSubmittingGuess) return;
+      if (!state.roomData || state.isSubmittingGuess) return;
       const data = state.roomData;
       const myRole = state.role;
       if (data.game?.turn !== myRole) return;
 
-      const { slots, allowDuplicates, winRule } = data.settings;
-
-      // Auto-fill any missing slots randomly if submitted via timeout
+      const { slots, allowDuplicates } = data.settings;
       if (isAutoTimeout) {
-        const availableIds = BOTTLES.map(b => b.id);
         for (let i = 0; i < slots; i++) {
           if (state.guessSlots[i] === null) {
             if (allowDuplicates) {
-              state.guessSlots[i] = availableIds[Math.floor(Math.random() * availableIds.length)];
+              state.guessSlots[i] = BOTTLE_IDS[Math.floor(Math.random() * BOTTLE_IDS.length)];
             } else {
-              const unused = availableIds.filter(id => !state.guessSlots.includes(id));
+              const unused = BOTTLE_IDS.filter(id => !state.guessSlots.includes(id));
               state.guessSlots[i] = unused[Math.floor(Math.random() * unused.length)];
             }
           }
@@ -2059,198 +2253,243 @@
       $("submitGuessBtn").disabled = true;
 
       try {
-        const oppRole = myRole === "host" ? "challenger" : "host";
-        const oppSecret = data.players?.[oppRole]?.secret || [];
         const guess = [...state.guessSlots];
-
-        // Calculate exact positional matches
-        let correct = 0;
-        for (let i = 0; i < slots; i++) {
-          if (guess[i] === oppSecret[i]) correct++;
-        }
-
-        const currentRound = data.game?.round || 1;
-        const guessRecord = {
-          round: currentRound,
-          guess,
-          correct,
-          timestamp: Date.now()
-        };
-
-        // Push guess record to player's guess log
-        const newGuessRef = push(ref(db, `${ROOT_PATH}/${state.roomCode}/guesses/${myRole}`));
-        await set(newGuessRef, guessRecord);
-
-        // Compute Win / Equalizer / Next Turn updates
-        const isAllCorrect = (correct === slots);
-        const feedbackObj = {
-          by: myRole,
-          round: currentRound,
-          correct,
-          total: slots,
-          id: `${Date.now()}_${myRole}`
-        };
-
-        const updates = {
-          "game/lastFeedback": feedbackObj
-        };
-
-        if (winRule === "instant") {
-          if (isAllCorrect) {
-            updates["status"] = "finished";
-            updates["game/winner"] = myRole;
-          } else {
-            if (myRole === "host") {
-              updates["game/turn"] = "challenger";
-            } else {
-              updates["game/turn"] = "host";
-              updates["game/round"] = currentRound + 1;
-            }
-            updates["game/turnStartedAt"] = Date.now();
-          }
-        } else {
-          // Equalizer Rule
-          if (myRole === "host") {
-            if (isAllCorrect) {
-              updates["game/equalizerTriggeredBy"] = "host";
-              updates["game/turn"] = "challenger";
-              updates["game/turnStartedAt"] = Date.now();
-            } else {
-              updates["game/turn"] = "challenger";
-              updates["game/turnStartedAt"] = Date.now();
-            }
-          } else {
-            // Challenger turn
-            if (data.game?.equalizerTriggeredBy === "host") {
-              updates["status"] = "finished";
-              updates["game/winner"] = isAllCorrect ? "draw" : "host";
-            } else {
-              if (isAllCorrect) {
-                updates["status"] = "finished";
-                updates["game/winner"] = "challenger";
-              } else {
-                updates["game/turn"] = "host";
-                updates["game/round"] = currentRound + 1;
-                updates["game/turnStartedAt"] = Date.now();
-              }
-            }
-          }
-        }
-
-        await update(state.roomRef, updates);
-
-        // Reset local guess slots for next turn
+        await applyGuessToState(myRole, guess);
         state.guessSlots = Array(slots).fill(null);
         state.guessActiveIdx = 0;
-      } catch (err) {
-        console.error("Submit guess error:", err);
-        showToast("Gagal menghantar tekaan. Sila cuba lagi.", "error");
       } finally {
         state.isSubmittingGuess = false;
       }
     }
 
+    async function applyGuessToState(actorRole, guessArr) {
+      const data = state.roomData;
+      if (!data) return;
+
+      const oppRole = actorRole === "host" ? "challenger" : "host";
+      const oppSecret = data.players?.[oppRole]?.secret || [];
+      const { slots, winRule } = data.settings;
+
+      const correct = countExactMatches(guessArr, oppSecret);
+      const currentRound = data.game?.round || 1;
+      const guessId = `g_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+
+      const guessRecord = {
+        round: currentRound,
+        guess: guessArr,
+        correct,
+        timestamp: Date.now()
+      };
+
+      const isAllCorrect = (correct === slots);
+      const feedbackObj = {
+        by: actorRole,
+        round: currentRound,
+        correct,
+        total: slots,
+        id: `${Date.now()}_${actorRole}`
+      };
+
+      let nextStatus = "playing";
+      let nextTurn = data.game?.turn;
+      let nextRound = currentRound;
+      let nextEqualizer = data.game?.equalizerTriggeredBy || null;
+      let nextWinner = null;
+
+      if (winRule === "instant") {
+        if (isAllCorrect) {
+          nextStatus = "finished";
+          nextWinner = actorRole;
+        } else if (actorRole === "host") {
+          nextTurn = "challenger";
+        } else {
+          nextTurn = "host";
+          nextRound = currentRound + 1;
+        }
+      } else {
+        // Equalizer Rule
+        if (actorRole === "host") {
+          if (isAllCorrect) nextEqualizer = "host";
+          nextTurn = "challenger";
+        } else {
+          if (data.game?.equalizerTriggeredBy === "host") {
+            nextStatus = "finished";
+            nextWinner = isAllCorrect ? "draw" : "host";
+          } else if (isAllCorrect) {
+            nextStatus = "finished";
+            nextWinner = "challenger";
+          } else {
+            nextTurn = "host";
+            nextRound = currentRound + 1;
+          }
+        }
+      }
+
+      if (state.gameMode === "bot") {
+        const updated = JSON.parse(JSON.stringify(data));
+        if (!updated.guesses) updated.guesses = { host: {}, challenger: {} };
+        if (!updated.guesses[actorRole]) updated.guesses[actorRole] = {};
+        updated.guesses[actorRole][guessId] = guessRecord;
+        updated.status = nextStatus;
+        updated.game = {
+          turn: nextTurn,
+          round: nextRound,
+          turnStartedAt: Date.now(),
+          equalizerTriggeredBy: nextEqualizer,
+          winner: nextWinner,
+          lastFeedback: feedbackObj
+        };
+        handleStateSync(updated);
+      } else if (state.roomRef) {
+        const newGuessRef = push(ref(db, `${ROOT_PATH}/${state.roomCode}/guesses/${actorRole}`));
+        await set(newGuessRef, guessRecord);
+        await update(state.roomRef, {
+          status: nextStatus,
+          "game/turn": nextTurn,
+          "game/round": nextRound,
+          "game/turnStartedAt": Date.now(),
+          "game/equalizerTriggeredBy": nextEqualizer,
+          "game/winner": nextWinner,
+          "game/lastFeedback": feedbackObj
+        });
+      }
+    }
+
     async function handleSendReaction(emoji) {
-      if (!state.roomRef || !state.roomData || state.reactionCooldown) return;
+      if (!state.roomData || state.reactionCooldown) return;
       state.reactionCooldown = true;
-      setTimeout(() => { state.reactionCooldown = false; }, 1400);
+      setTimeout(() => { state.reactionCooldown = false; }, 1200);
 
       const myName = state.roomData.players?.[state.role]?.name || state.nickname;
-      try {
-        await update(state.roomRef, {
-          reaction: {
-            id: `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-            fromRole: state.role,
-            fromName: myName,
-            emoji
-          }
-        });
-      } catch (e) {
-        // Ignore reaction errors
+      if (state.gameMode === "bot") {
+        showFloatingReaction(emoji, myName);
+      } else if (state.roomRef) {
+        try {
+          await update(state.roomRef, {
+            reaction: {
+              id: `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+              fromRole: state.role,
+              fromName: myName,
+              emoji
+            }
+          });
+        } catch (e) {}
       }
     }
 
     // =========================================================================
-    // 12. GUESS HISTORY PANEL RENDERER
+    // 13. "TEKAAN LEPAS" SLIDE-OVER DRAWER & HISTORY RENDERER
     // =========================================================================
     function getSortedGuesses(guessesObj) {
       if (!guessesObj) return [];
       return Object.values(guessesObj).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     }
 
-    function renderGuessHistory() {
+    function renderMiniBottleChips(bottleArr) {
+      return (bottleArr || []).map(bId => {
+        const b = BOTTLE_MAP[bId];
+        if (!b) return "";
+        return `
+          <div class="flex flex-col items-center px-2 py-1.5 rounded-xl bg-slate-900 border ${b.border}">
+            <div class="w-7 h-7 sm:w-8 sm:h-8">${b.svg}</div>
+            <span class="text-[10px] font-bold ${b.text} mt-0.5">${b.name}</span>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderLastGuessDrawer() {
+      const data = state.roomData;
+      if (!data) return;
+
+      const myRole = state.role;
+      const myGuesses = getSortedGuesses(data.guesses?.[myRole]);
+      const totalSlots = data.settings.slots;
+
+      // Reset secret peek state on open
+      $("drawerMySecretReveal").classList.add("hidden");
+      $("togglePeekSecretBtn").textContent = "👁️ Intip Kod";
+
+      if (myGuesses.length > 0) {
+        const last = myGuesses[0];
+        $("drawerLastScoreBadge").textContent = `Pusingan #${last.round} • ${last.correct}/${totalSlots} Betul`;
+        $("drawerLastBottlesRow").innerHTML = renderMiniBottleChips(last.guess);
+        $("drawerCopyLastBtn").disabled = (data.game?.turn !== myRole);
+      } else {
+        $("drawerLastScoreBadge").textContent = "Tiada lagi";
+        $("drawerLastBottlesRow").innerHTML = `<span class="text-xs text-slate-500 py-2">Anda belum menghantar sebarang tekaan.</span>`;
+        $("drawerCopyLastBtn").disabled = true;
+      }
+
+      renderGuessHistoryList();
+    }
+
+    function renderGuessHistoryList() {
       const data = state.roomData;
       if (!data) return;
 
       const myRole = state.role;
       const oppRole = myRole === "host" ? "challenger" : "host";
-
       const myGuesses = getSortedGuesses(data.guesses?.[myRole]);
       const oppGuesses = getSortedGuesses(data.guesses?.[oppRole]);
 
       $("myGuessCount").textContent = myGuesses.length;
       $("oppGuessCount").textContent = oppGuesses.length;
 
-      // Tab Styling
       const tabMine = $("tabMyGuesses");
       const tabOpp = $("tabOppGuesses");
       if (state.activeHistoryTab === "mine") {
-        tabMine.className = "px-3 py-1.5 rounded-lg bg-sky-500/20 text-sky-300 font-bold text-xs transition";
-        tabOpp.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-white font-bold text-xs transition";
+        tabMine.className = "py-2 rounded-lg bg-sky-500/20 text-sky-300 font-bold text-xs transition";
+        tabOpp.className = "py-2 rounded-lg text-slate-400 hover:text-white font-bold text-xs transition";
       } else {
-        tabOpp.className = "px-3 py-1.5 rounded-lg bg-purple-500/20 text-purple-300 font-bold text-xs transition";
-        tabMine.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-white font-bold text-xs transition";
+        tabOpp.className = "py-2 rounded-lg bg-purple-500/20 text-purple-300 font-bold text-xs transition";
+        tabMine.className = "py-2 rounded-lg text-slate-400 hover:text-white font-bold text-xs transition";
       }
 
       const activeList = state.activeHistoryTab === "mine" ? myGuesses : oppGuesses;
       const listEl = $("guessHistoryList");
 
       if (activeList.length === 0) {
-        listEl.innerHTML = `<div class="text-center py-6 text-sm text-slate-500">Belum ada rekod tekaan lagi.</div>`;
+        listEl.innerHTML = `<div class="text-center py-6 text-xs text-slate-500">Belum ada rekod tekaan lagi.</div>`;
         return;
       }
 
       const totalSlots = data.settings.slots;
-      listEl.innerHTML = activeList.map((item) => {
+      listEl.innerHTML = activeList.map(item => {
         const isPerfect = item.correct === totalSlots;
-        const isPartial = item.correct > 0 && !isPerfect;
-        const badgeClass = isPerfect
+        const badgeStyle = isPerfect
           ? "bg-emerald-500/20 border-emerald-400/50 text-emerald-300"
-          : isPartial
+          : item.correct > 0
             ? "bg-amber-500/20 border-amber-400/40 text-amber-300"
             : "bg-slate-800 border-slate-700 text-slate-400";
 
-        const miniBottlesHtml = (item.guess || []).map(bId => {
+        const chips = (item.guess || []).map(bId => {
           const b = BOTTLE_MAP[bId];
           if (!b) return "";
           return `
-            <div class="flex flex-col items-center px-1.5 py-1 rounded-lg bg-slate-950/70 border ${b.border}" title="${b.name}">
-              <div class="w-6 h-6 sm:w-7 sm:h-7">${b.svg}</div>
+            <div class="flex flex-col items-center px-1.5 py-1 rounded-lg bg-slate-950 border ${b.border}">
+              <div class="w-6 h-6">${b.svg}</div>
               <span class="text-[9px] font-bold ${b.text} mt-0.5">${b.name}</span>
             </div>
           `;
         }).join("");
 
         return `
-          <div class="flex items-center justify-between gap-2 p-2.5 sm:p-3 rounded-2xl bg-slate-900/75 border border-slate-800">
-            <div class="flex items-center gap-2 overflow-x-auto">
-              <span class="shrink-0 w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center font-display font-bold text-xs text-slate-300">
-                #${item.round}
-              </span>
-              <div class="flex items-center gap-1.5">
-                ${miniBottlesHtml}
-              </div>
+          <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800">
+            <div class="flex items-center gap-1.5 overflow-x-auto">
+              <span class="shrink-0 w-6 h-6 rounded-md bg-slate-800 flex items-center justify-center font-display font-bold text-[11px] text-slate-300">#${item.round}</span>
+              <div class="flex items-center gap-1">${chips}</div>
             </div>
-            <div class="shrink-0 px-2.5 py-1.5 rounded-xl border font-display font-bold text-xs ${badgeClass}">
-              ${item.correct} / ${totalSlots} Betul
-            </div>
+            <span class="shrink-0 px-2 py-1 rounded-lg border font-display font-bold text-[11px] ${badgeStyle}">
+              ${item.correct}/${totalSlots} Betul
+            </span>
           </div>
         `;
       }).join("");
     }
 
     // =========================================================================
-    // 13. VICTORY / SECRET REVEAL SCREEN & REMATCH
+    // 14. VICTORY / SECRET REVEAL & REMATCH
     // =========================================================================
     function renderFinishedView(data) {
       const myRole = state.role;
@@ -2259,92 +2498,82 @@
       const opp = data.players?.[oppRole] || {};
       const winner = data.game?.winner;
 
-      const heroCard = $("resultHeroCard");
       if (winner === myRole) {
-        heroCard.className = "glass-card-glow rounded-3xl p-6 sm:p-8 text-center space-y-3 border-emerald-400/60";
         $("resultIcon").textContent = "🏆";
         $("resultHeadline").textContent = "ANDA MENANG!";
         $("resultHeadline").className = "font-display font-bold text-3xl sm:text-4xl tracking-tight bg-gradient-to-r from-emerald-300 via-teal-200 to-amber-300 bg-clip-text text-transparent";
-        $("resultSubtext").textContent = `Hebat! Anda berjaya memecahkan susunan rahsia ${opp.name || "lawan"} dengan tepat.`;
+        $("resultSubtext").textContent = `Tahniah! Anda berjaya meneka kod rahsia ${opp.name || "lawan"} dengan tepat.`;
       } else if (winner === "draw") {
-        heroCard.className = "glass-card-glow rounded-3xl p-6 sm:p-8 text-center space-y-3 border-amber-400/60";
         $("resultIcon").textContent = "⚡";
         $("resultHeadline").textContent = "SERI — EQUALIZER!";
-        $("resultHeadline").className = "font-display font-bold text-3xl sm:text-4xl tracking-tight bg-gradient-to-r from-amber-300 via-sky-300 to-purple-300 bg-clip-text text-transparent";
+        $("resultHeadline").className = "font-display font-bold text-3xl sm:text-4xl tracking-tight text-amber-300";
         $("resultSubtext").textContent = "Kedua-dua pemain berjaya meneka tepat pada pusingan yang sama!";
       } else {
-        heroCard.className = "glass-card rounded-3xl p-6 sm:p-8 text-center space-y-3 border-rose-500/40";
         $("resultIcon").textContent = "🛡️";
         $("resultHeadline").textContent = "ANDA KALAH!";
         $("resultHeadline").className = "font-display font-bold text-3xl sm:text-4xl tracking-tight text-rose-400";
-        $("resultSubtext").textContent = `${opp.name || "Lawan"} berjaya meneka susunan rahsia anda terlebih dahulu.`;
+        $("resultSubtext").textContent = `${opp.name || "Lawan"} berjaya memecahkan kod rahsia anda terlebih dahulu.`;
       }
 
-      const myGuessesCount = getSortedGuesses(data.guesses?.[myRole]).length;
-      const oppGuessesCount = getSortedGuesses(data.guesses?.[oppRole]).length;
-      $("resultMatchMeta").textContent = `Pusingan: ${data.game?.round || 1} • Tekaan Anda: ${myGuessesCount} • Tekaan Lawan: ${oppGuessesCount}`;
+      const myCount = getSortedGuesses(data.guesses?.[myRole]).length;
+      const oppCount = getSortedGuesses(data.guesses?.[oppRole]).length;
+      $("resultMatchMeta").textContent = `Pusingan: ${data.game?.round || 1} • Tekaan Anda: ${myCount} • Tekaan Lawan: ${oppCount}`;
 
-      // Reveal secrets side by side
       $("revealMyName").textContent = me.name || "Anda";
       $("revealOppName").textContent = opp.name || "Lawan";
-
-      $("revealMySecretSlots").innerHTML = renderRevealSecretList(me.secret || []);
-      $("revealOppSecretSlots").innerHTML = renderRevealSecretList(opp.secret || []);
-    }
-
-    function renderRevealSecretList(secretArr) {
-      return secretArr.map((bId, idx) => {
-        const b = BOTTLE_MAP[bId];
-        if (!b) return "";
-        return `
-          <div class="flex flex-col items-center p-2 rounded-xl bg-slate-900/90 border ${b.border} min-w-[58px]">
-            <span class="text-[9px] font-bold text-slate-500 mb-0.5">#${idx + 1}</span>
-            <div class="w-10 h-10 sm:w-11 sm:h-11">${b.svg}</div>
-            <span class="text-[11px] font-bold ${b.text} mt-1">${b.name}</span>
-          </div>
-        `;
-      }).join("");
+      $("revealMySecretSlots").innerHTML = renderMiniBottleChips(me.secret || []);
+      $("revealOppSecretSlots").innerHTML = renderMiniBottleChips(opp.secret || []);
     }
 
     async function handleRematch() {
-      if (!state.roomRef || !state.roomData) return;
+      if (!state.roomData) return;
       sfx.playSubmit();
-      const btn = $("rematchBtn");
-      btn.disabled = true;
 
-      try {
-        await update(state.roomRef, {
-          status: "setup",
-          "players/host/ready": false,
-          "players/host/secret": [],
-          "players/challenger/ready": false,
-          "players/challenger/secret": [],
-          guesses: null,
-          game: {
-            turn: "host",
-            round: 1,
-            turnStartedAt: null,
-            equalizerTriggeredBy: null,
-            winner: null,
-            lastFeedback: null
-          }
-        });
-        showToast("Perlawanan baharu dimulakan!", "success");
-      } catch (err) {
-        console.error("Rematch error:", err);
-        showToast("Gagal memulakan rematch.", "error");
-      } finally {
-        btn.disabled = false;
+      if (state.gameMode === "bot") {
+        startBotMatch();
+        showToast("Perlawanan baharu menentang Bot dimulakan!", "success");
+      } else if (state.roomRef) {
+        $("rematchBtn").disabled = true;
+        try {
+          await update(state.roomRef, {
+            status: "setup",
+            "players/host/ready": false,
+            "players/host/secret": [],
+            "players/challenger/ready": false,
+            "players/challenger/secret": [],
+            guesses: null,
+            game: {
+              turn: "host",
+              round: 1,
+              turnStartedAt: null,
+              equalizerTriggeredBy: null,
+              winner: null,
+              lastFeedback: null
+            }
+          });
+          showToast("Rematch dimulakan!", "success");
+        } catch (err) {
+          showToast("Gagal memulakan rematch.", "error");
+        } finally {
+          $("rematchBtn").disabled = false;
+        }
       }
     }
 
     // =========================================================================
-    // 14. BOOTSTRAP ON WINDOW LOAD
+    // 15. INITIALIZE APPLICATION IMMEDIATELY
     // =========================================================================
-    window.addEventListener("DOMContentLoaded", () => {
-      initLobbyUI();
-      initAnonymousAuth();
-    });
+    window.DuelBotol = { state, startBotMatch, openLastGuessDrawer, closeLastGuessDrawer };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", () => {
+        bindAllEvents();
+        initFirebaseNonBlocking();
+      });
+    } else {
+      bindAllEvents();
+      initFirebaseNonBlocking();
+    }
   </script>
 </body>
 </html>
